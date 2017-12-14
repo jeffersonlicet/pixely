@@ -27,17 +27,17 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.IntBuffer;
+import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+import org.wysaid.view.CameraGLSurfaceView;
 
 
-public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener {
+public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener
+{
 
-    private static final int BACK_CAMERA    = 0;
-    private static final int FRONTAL_CAMERA = 1;
-
-
+    private static final int BACK_CAMERA = 0;
     public static final String LOG_TAG = Common.LOG_TAG;
 
     public int mMaxTextureSize = 0;
@@ -45,28 +45,30 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
     public int mViewWidth;
     public int mViewHeight;
 
-    protected int mRecordWidth = 480;
-    protected int mRecordHeight = 640;
+    protected int mRecordWidth;
+    protected int mRecordHeight;
 
     protected SurfaceTexture mSurfaceTexture;
     protected int mTextureID;
 
     protected CGEFrameRecorder mFrameRecorder;
 
-    public CGEFrameRecorder getRecorder() {
+
+    public CGEFrameRecorder getRecorder()
+    {
         return mFrameRecorder;
     }
 
-    public int mMaxPreviewWidth = 1280;
-    public int mMaxPreviewHeight = 1280;
+    public void requestPortrait()
+    {
+        mFitFullView = true;
 
-    //The max preview size. Change it to 1920+ if you want to preview with 1080P
-    void setMaxPreviewSize(int w, int h) {
-        mMaxPreviewWidth = w;
-        mMaxPreviewHeight = h;
+        if (mFrameRecorder != null)
+            calcViewport();
     }
 
-    public class ClearColor {
+    public class ClearColor
+    {
         public float r, g, b, a;
     }
 
@@ -80,40 +82,40 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
 
     protected boolean mIsTransformMatrixSet = false;
 
-    public void setFitFullView(boolean fit) {
-        mFitFullView = fit;
-        if (mFrameRecorder != null)
-            calcViewport();
-    }
 
-    public boolean isUsingMask() {
+    public boolean isUsingMask()
+    {
         return mIsUsingMask;
     }
 
     protected float mMaskAspectRatio = 1.0f;
 
-    //是否使用后置摄像头
     protected boolean mIsCameraBackForward = true;
 
-    public boolean isCameraBackForward() {
+    public boolean isCameraBackForward()
+    {
         return mIsCameraBackForward;
     }
 
     public void setCameraFacing(int facing)
     {
-        if(BACK_CAMERA == facing){
+        if (BACK_CAMERA == facing)
+        {
             mIsCameraBackForward = true;
         } else mIsCameraBackForward = false;
     }
 
-    public void setClearColor(float r, float g, float b, float a) {
+    public void setClearColor(float r, float g, float b, float a)
+    {
         mClearColor.r = r;
         mClearColor.g = g;
         mClearColor.b = b;
         mClearColor.a = a;
-        queueEvent(new Runnable() {
+        queueEvent(new Runnable()
+        {
             @Override
-            public void run() {
+            public void run()
+            {
                 GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
                 GLES20.glClearColor(mClearColor.r, mClearColor.g, mClearColor.b, mClearColor.a);
                 GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
@@ -121,39 +123,25 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
         });
     }
 
-    public CameraInstance cameraInstance() {
+    public CameraInstance cameraInstance()
+    {
         return CameraInstance.getInstance();
     }
 
-    //should be called before 'onSurfaceCreated'.
-    public void presetCameraForward(boolean isBackForward) {
-        mIsCameraBackForward = isBackForward;
-    }
-
-    //注意， 录制的尺寸将影响preview的尺寸
-    //这里的width和height表示竖屏尺寸
-    //在onSurfaceCreated之前设置有效
-    public void presetRecordingSize(int width, int height) {
-        if (width > mMaxPreviewWidth || height > mMaxPreviewHeight) {
-            float scaling = Math.min(mMaxPreviewWidth / (float) width, mMaxPreviewHeight / (float) height);
-            width = (int) (width * scaling);
-            height = (int) (height * scaling);
-        }
-
-        mRecordWidth = width;
-        mRecordHeight = height;
-        cameraInstance().setPreferPreviewSize(width, height);
-    }
-
-    public synchronized void switchCamera() {
+    public synchronized void switchCamera()
+    {
         mIsCameraBackForward = !mIsCameraBackForward;
 
-        if (mFrameRecorder != null) {
-            queueEvent(new Runnable() {
+        if (mFrameRecorder != null)
+        {
+            queueEvent(new Runnable()
+            {
                 @Override
-                public void run() {
+                public void run()
+                {
 
-                    if (mFrameRecorder == null) {
+                    if (mFrameRecorder == null)
+                    {
                         Log.e(LOG_TAG, "Error: switchCamera after release!!");
                         return;
                     }
@@ -165,14 +153,18 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
                     mFrameRecorder.setSrcRotation((float) (Math.PI / 2.0));
                     mFrameRecorder.setRenderFlipScale(1.0f, -1.0f);
 
-                    if (mIsUsingMask) {
+                    if (mIsUsingMask)
+                    {
                         mFrameRecorder.setMaskTextureRatio(mMaskAspectRatio);
                     }
 
-                    cameraInstance().tryOpenCamera(new CameraInstance.CameraOpenCallback() {
+                    cameraInstance().tryOpenCamera(new CameraInstance.CameraOpenCallback()
+                    {
                         @Override
-                        public void cameraReady() {
-                            if (!cameraInstance().isPreviewing()) {
+                        public void cameraReady()
+                        {
+                            if (!cameraInstance().isPreviewing())
+                            {
                                 Log.i(LOG_TAG, "## switch camera -- start preview...");
                                 cameraInstance().startPreview(mSurfaceTexture);
                                 mFrameRecorder.srcResize(cameraInstance().previewHeight(), cameraInstance().previewWidth());
@@ -189,7 +181,8 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
     //Attention， 'focusAtPoint' will change focus mode to 'FOCUS_MODE_AUTO'
     //If you want to keep the previous focus mode， please reset the focus mode after 'AutoFocusCallback'.
     //x,y should be: [0, 1]， stands for 'touchEventPosition / viewSize'.
-    public void focusAtPoint(float x, float y, Camera.AutoFocusCallback focusCallback) {
+    public void focusAtPoint(float x, float y, Camera.AutoFocusCallback focusCallback)
+    {
         cameraInstance().focusAtPoint(y, 1.0f - x, focusCallback);
     }
 
@@ -199,14 +192,17 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
     //    Camera.Parameters.FLASH_MODE_ON;
     //    Camera.Parameters.FLASH_MODE_RED_EYE
     //    Camera.Parameters.FLASH_MODE_TORCH 等
-    public synchronized boolean setFlashLightMode(String mode) {
+    public synchronized boolean setFlashLightMode(String mode)
+    {
 
-        if (!getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
+        if (!getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
+        {
             Log.e(LOG_TAG, "No flash light is supported by current device!");
             return false;
         }
 
-        if (!mIsCameraBackForward) {
+        if (!mIsCameraBackForward)
+        {
             return false;
         }
 
@@ -215,16 +211,19 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
         if (parameters == null)
             return false;
 
-        try {
+        try
+        {
 
-            if (!parameters.getSupportedFlashModes().contains(mode)) {
+            if (!parameters.getSupportedFlashModes().contains(mode))
+            {
                 Log.e(LOG_TAG, "Invalid Flash Light Mode!!!");
                 return false;
             }
 
             parameters.setFlashMode(mode);
             cameraInstance().setParams(parameters);
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             Log.e(LOG_TAG, "Switch flash light failed, check if you're using front camera.");
             return false;
         }
@@ -232,54 +231,71 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
         return true;
     }
 
-    public synchronized void setFilterWithConfig(final String config) {
-        queueEvent(new Runnable() {
+    public synchronized void setFilterWithConfig(final String config)
+    {
+        queueEvent(new Runnable()
+        {
             @Override
-            public void run() {
+            public void run()
+            {
 
-                if (mFrameRecorder != null) {
+                if (mFrameRecorder != null)
+                {
                     mFrameRecorder.setFilterWidthConfig(config);
-                } else {
+                } else
+                {
                     Log.e(LOG_TAG, "setFilterWithConfig after release!!");
                 }
             }
         });
     }
 
-    public void setFilterIntensity(final float intensity) {
-        queueEvent(new Runnable() {
+    public void setFilterIntensity(final float intensity)
+    {
+        queueEvent(new Runnable()
+        {
             @Override
-            public void run() {
-                if (mFrameRecorder != null) {
+            public void run()
+            {
+                if (mFrameRecorder != null)
+                {
                     mFrameRecorder.setFilterIntensity(intensity);
-                } else {
+                } else
+                {
                     Log.e(LOG_TAG, "setFilterIntensity after release!!");
                 }
             }
         });
     }
 
-    public interface SetMaskBitmapCallback {
+    public interface SetMaskBitmapCallback
+    {
         void setMaskOK(CGEFrameRecorder recorder);
     }
 
-    public void setMaskBitmap(final Bitmap bmp, final boolean shouldRecycle) {
+    public void setMaskBitmap(final Bitmap bmp, final boolean shouldRecycle)
+    {
         setMaskBitmap(bmp, shouldRecycle, null);
     }
 
     //bmp should not be null.
-    public void setMaskBitmap(final Bitmap bmp, final boolean shouldRecycle, final SetMaskBitmapCallback callback) {
+    public void setMaskBitmap(final Bitmap bmp, final boolean shouldRecycle, final SetMaskBitmapCallback callback)
+    {
 
-        queueEvent(new Runnable() {
+        queueEvent(new Runnable()
+        {
             @Override
-            public void run() {
+            public void run()
+            {
 
-                if (mFrameRecorder == null) {
+                if (mFrameRecorder == null)
+                {
                     Log.e(LOG_TAG, "setMaskBitmap after release!!");
                     return;
                 }
 
-                if (bmp == null) {
+                if (bmp == null)
+                {
                     mFrameRecorder.setMaskTexture(0, 1.0f);
                     mIsUsingMask = false;
                     calcViewport();
@@ -292,7 +308,8 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
                 mIsUsingMask = true;
                 mMaskAspectRatio = bmp.getWidth() / (float) bmp.getHeight();
 
-                if (callback != null) {
+                if (callback != null)
+                {
                     callback.setMaskOK(mFrameRecorder);
                 }
 
@@ -304,31 +321,38 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
         });
     }
 
-    public interface OnCreateCallback {
+    public interface OnCreateCallback
+    {
         void createOver(boolean success);
     }
 
     protected OnCreateCallback mOnCreateCallback;
 
     //定制一些初始化操作
-    public void setOnCreateCallback(final OnCreateCallback callback) {
+    public void setOnCreateCallback(final OnCreateCallback callback)
+    {
 
         assert callback != null : "Invalid Operation!";
 
-        if (mFrameRecorder == null) {
+        if (mFrameRecorder == null)
+        {
             mOnCreateCallback = callback;
-        } else {
+        } else
+        {
             // Already created, just run.
-            queueEvent(new Runnable() {
+            queueEvent(new Runnable()
+            {
                 @Override
-                public void run() {
+                public void run()
+                {
                     callback.createOver(cameraInstance().getCameraDevice() != null);
                 }
             });
         }
     }
 
-    public CustomSurfaceView(Context context, AttributeSet attrs) {
+    public CustomSurfaceView(Context context, AttributeSet attrs)
+    {
         super(context, attrs);
         Log.i(LOG_TAG, "MyGLSurfaceView Construct...");
 
@@ -344,8 +368,43 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
     }
 
     @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+    public void onSurfaceCreated(GL10 gl, EGLConfig config)
+    {
         Log.i(LOG_TAG, "onSurfaceCreated...");
+
+        if (!cameraInstance().isCameraOpened())
+        {
+
+            int facing = mIsCameraBackForward ? Camera.CameraInfo.CAMERA_FACING_BACK : Camera.CameraInfo.CAMERA_FACING_FRONT;
+
+            if (!cameraInstance().tryOpenCamera(null, facing))
+            {
+                Log.e(LOG_TAG, "La camara esta siendo usada");
+            }
+
+            List<Camera.Size> previewSizes = cameraInstance().getParams().getSupportedPreviewSizes();
+
+            int index = 0;
+            int max = 0;
+
+            for (int i = 0; i < previewSizes.size(); i++)
+            {
+                Camera.Size size = previewSizes.get(i);
+                int actual = size.width * size.width;
+                if (actual > max)
+                {
+                    max = actual;
+                    index = i;
+                }
+            }
+            Camera.Size finalSize = previewSizes.get(index);
+            Log.d(LOG_TAG, finalSize.width + " final width");
+            Log.d(LOG_TAG, finalSize.height + " final height");
+
+            //Invert due to portrait mode
+            mRecordWidth = finalSize.height;
+            mRecordHeight = finalSize.width;
+        }
 
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         GLES20.glDisable(GLES20.GL_STENCIL_TEST);
@@ -362,7 +421,8 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
 
         mFrameRecorder = new CGEFrameRecorder();
         mIsTransformMatrixSet = false;
-        if (!mFrameRecorder.init(mRecordWidth, mRecordHeight, mRecordWidth, mRecordHeight)) {
+        if (!mFrameRecorder.init(mRecordWidth, mRecordHeight, mRecordWidth, mRecordHeight))
+        {
             Log.e(LOG_TAG, "Frame Recorder init failed!");
         }
 
@@ -372,27 +432,23 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
 
         requestRender();
 
-        if (!cameraInstance().isCameraOpened()) {
 
-            int facing = mIsCameraBackForward ? Camera.CameraInfo.CAMERA_FACING_BACK : Camera.CameraInfo.CAMERA_FACING_FRONT;
-
-            if (!cameraInstance().tryOpenCamera(null, facing)) {
-                Log.e(LOG_TAG, "相机启动失败!!");
-            }
-        }
-
-        if (mOnCreateCallback != null) {
+        if (mOnCreateCallback != null)
+        {
             mOnCreateCallback.createOver(cameraInstance().getCameraDevice() != null);
         }
     }
 
-    protected void calcViewport() {
+    protected void calcViewport()
+    {
 
         float scaling;
 
-        if (mIsUsingMask) {
+        if (mIsUsingMask)
+        {
             scaling = mMaskAspectRatio;
-        } else {
+        } else
+        {
             scaling = mRecordWidth / (float) mRecordHeight;
         }
 
@@ -401,21 +457,27 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
 
         int w, h;
 
-        if (mFitFullView) {
+        if (mFitFullView)
+        {
             //撑满全部view(内容大于view)
-            if (s > 1.0) {
+            if (s > 1.0)
+            {
                 w = (int) (mViewHeight * scaling);
                 h = mViewHeight;
-            } else {
+            } else
+            {
                 w = mViewWidth;
                 h = (int) (mViewWidth / scaling);
             }
-        } else {
+        } else
+        {
             //显示全部内容(内容小于view)
-            if (s > 1.0) {
+            if (s > 1.0)
+            {
                 w = mViewWidth;
                 h = (int) (mViewWidth / scaling);
-            } else {
+            } else
+            {
                 h = mViewHeight;
                 w = (int) (mViewHeight * scaling);
             }
@@ -428,20 +490,26 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
         Log.i(LOG_TAG, String.format("View port: %d, %d, %d, %d", mDrawViewport.x, mDrawViewport.y, mDrawViewport.width, mDrawViewport.height));
     }
 
-    public interface ReleaseOKCallback {
+    public interface ReleaseOKCallback
+    {
 
         void releaseOK();
     }
 
-    public synchronized void release(final ReleaseOKCallback callback) {
+    public synchronized void release(final ReleaseOKCallback callback)
+    {
 
-        if (mFrameRecorder != null) {
+        if (mFrameRecorder != null)
+        {
 
-            queueEvent(new Runnable() {
+            queueEvent(new Runnable()
+            {
                 @Override
-                public void run() {
+                public void run()
+                {
 
-                    if (mFrameRecorder != null) {
+                    if (mFrameRecorder != null)
+                    {
                         mFrameRecorder.release();
                         mFrameRecorder = null;
                         GLES20.glDeleteTextures(1, new int[]{mTextureID}, 0);
@@ -460,7 +528,8 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
     }
 
     @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
+    public void onSurfaceChanged(GL10 gl, int width, int height)
+    {
         Log.i(LOG_TAG, String.format("onSurfaceChanged: %d x %d", width, height));
 
         GLES20.glClearColor(mClearColor.r, mClearColor.g, mClearColor.b, mClearColor.a);
@@ -470,48 +539,59 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
 
         calcViewport();
 
-        if (!cameraInstance().isPreviewing()) {
+        if (!cameraInstance().isPreviewing())
+        {
             cameraInstance().startPreview(mSurfaceTexture);
             mFrameRecorder.srcResize(cameraInstance().previewHeight(), cameraInstance().previewWidth());
         }
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    public void surfaceDestroyed(SurfaceHolder holder)
+    {
         super.surfaceDestroyed(holder);
         cameraInstance().stopCamera();
     }
 
-    public void stopPreview() {
+    public void stopPreview()
+    {
 
-        queueEvent(new Runnable() {
+        queueEvent(new Runnable()
+        {
             @Override
-            public void run() {
+            public void run()
+            {
                 cameraInstance().stopPreview();
             }
         });
     }
 
-    public synchronized void resumePreview() {
+    public synchronized void resumePreview()
+    {
 
-        if (mFrameRecorder == null) {
+        if (mFrameRecorder == null)
+        {
             Log.e(LOG_TAG, "resumePreview after release!!");
             return;
         }
 
-        if (!cameraInstance().isCameraOpened()) {
+        if (!cameraInstance().isCameraOpened())
+        {
 
             int facing = mIsCameraBackForward ? Camera.CameraInfo.CAMERA_FACING_BACK : Camera.CameraInfo.CAMERA_FACING_FRONT;
 
-            cameraInstance().tryOpenCamera(new CameraInstance.CameraOpenCallback() {
+            cameraInstance().tryOpenCamera(new CameraInstance.CameraOpenCallback()
+            {
                 @Override
-                public void cameraReady() {
+                public void cameraReady()
+                {
                     Log.i(LOG_TAG, "tryOpenCamera OK...");
                 }
             }, facing);
         }
 
-        if (!cameraInstance().isPreviewing()) {
+        if (!cameraInstance().isPreviewing())
+        {
             cameraInstance().startPreview(mSurfaceTexture);
             mFrameRecorder.srcResize(cameraInstance().previewHeight(), cameraInstance().previewWidth());
         }
@@ -522,9 +602,11 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
     private float[] _transformMatrix = new float[16];
 
     @Override
-    public void onDrawFrame(GL10 gl) {
+    public void onDrawFrame(GL10 gl)
+    {
 
-        if (mSurfaceTexture == null || !cameraInstance().isPreviewing()) {
+        if (mSurfaceTexture == null || !cameraInstance().isPreviewing())
+        {
             //防止双缓冲情况下最后几帧抖动
 //            if (mFrameRecorder != null) {
 //                GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
@@ -552,13 +634,15 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
     }
 
     @Override
-    public void onResume() {
+    public void onResume()
+    {
         super.onResume();
         Log.i(LOG_TAG, "glsurfaceview onResume...");
     }
 
     @Override
-    public void onPause() {
+    public void onPause()
+    {
         Log.i(LOG_TAG, "glsurfaceview onPause in...");
 
         cameraInstance().stopCamera();
@@ -571,7 +655,8 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
     protected long mLastTimestamp2 = 0;
 
     @Override
-    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+    public void onFrameAvailable(SurfaceTexture surfaceTexture)
+    {
 
         requestRender();
 
@@ -583,41 +668,49 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
         ++mFramesCount2;
         mTimeCount2 += currentTimestamp - mLastTimestamp2;
         mLastTimestamp2 = currentTimestamp;
-        if (mTimeCount2 >= 1000) {
+        if (mTimeCount2 >= 1000)
+        {
             //Log.i(LOG_TAG, String.format("camera sample rate: %d", mFramesCount2));
             mTimeCount2 %= 1000;
             mFramesCount2 = 0;
         }
     }
 
-    public interface TakePictureCallback {
+    public interface TakePictureCallback
+    {
         //You can recycle the bitmap.
         void takePictureOK(Bitmap bmp);
     }
 
-    public void takeShot(final TakePictureCallback callback) {
+    public void takeShot(final TakePictureCallback callback)
+    {
         takeShot(callback, true);
     }
 
-    public synchronized void takeShot(final TakePictureCallback callback, final boolean noMask) {
+    public synchronized void takeShot(final TakePictureCallback callback, final boolean noMask)
+    {
         assert callback != null : "callback must not be null!";
 
-        if (mFrameRecorder == null) {
+        if (mFrameRecorder == null)
+        {
             Log.e(LOG_TAG, "Recorder not initialized!");
             callback.takePictureOK(null);
             return;
         }
 
-        queueEvent(new Runnable() {
+        queueEvent(new Runnable()
+        {
             @Override
-            public void run() {
+            public void run()
+            {
 
                 FrameBufferObject frameBufferObject = new FrameBufferObject();
                 int bufferTexID;
                 IntBuffer buffer;
                 Bitmap bmp;
 
-                if (noMask || !mIsUsingMask) {
+                if (noMask || !mIsUsingMask)
+                {
 
                     bufferTexID = Common.genBlankTextureID(mRecordWidth, mRecordHeight);
                     frameBufferObject.bindTexture(bufferTexID);
@@ -629,7 +722,8 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
                     bmp.copyPixelsFromBuffer(buffer);
                     Log.i(LOG_TAG, String.format("w: %d, h: %d", mRecordWidth, mRecordHeight));
 
-                } else {
+                } else
+                {
 
                     bufferTexID = Common.genBlankTextureID(mDrawViewport.width, mDrawViewport.height);
                     frameBufferObject.bindTexture(bufferTexID);
@@ -660,36 +754,45 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
     }
 
 
-    public void setPictureSize(int width, int height, boolean isBigger) {
+    public void setPictureSize(int width, int height, boolean isBigger)
+    {
         cameraInstance().setPictureSize(height, width, isBigger);
     }
 
-    public synchronized void takePicture(final TakePictureCallback photoCallback, Camera.ShutterCallback shutterCallback, final String config, final float intensity, final boolean isFrontMirror) {
+    public synchronized void takePicture(final TakePictureCallback photoCallback, Camera.ShutterCallback shutterCallback, final String config, final float intensity, final boolean isFrontMirror)
+    {
 
         Camera.Parameters params = cameraInstance().getParams();
 
-        if (photoCallback == null || params == null) {
+        if (photoCallback == null || params == null)
+        {
             Log.e(LOG_TAG, "takePicture after release!");
-            if (photoCallback != null) {
+            if (photoCallback != null)
+            {
                 photoCallback.takePictureOK(null);
             }
             return;
         }
 
-        try {
+        try
+        {
             params.setRotation(90);
             cameraInstance().setParams(params);
-        } catch (Exception e) {
+        } catch (Exception e)
+        {
             Log.e(LOG_TAG, "Error when takePicture: " + e.toString());
-            if (photoCallback != null) {
+            if (photoCallback != null)
+            {
                 photoCallback.takePictureOK(null);
             }
             return;
         }
 
-        cameraInstance().getCameraDevice().takePicture(shutterCallback, null, new Camera.PictureCallback() {
+        cameraInstance().getCameraDevice().takePicture(shutterCallback, null, new Camera.PictureCallback()
+        {
             @Override
-            public void onPictureTaken(final byte[] data, Camera camera) {
+            public void onPictureTaken(final byte[] data, Camera camera)
+            {
 
                 Camera.Parameters params = camera.getParameters();
                 Camera.Size sz = params.getPictureSize();
@@ -700,16 +803,19 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
                 int width, height;
 
                 //当拍出相片不为正方形时， 可以判断图片是否旋转
-                if (sz.width != sz.height) {
+                if (sz.width != sz.height)
+                {
                     //默认数据格式已经设置为 JPEG
                     bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
                     width = bmp.getWidth();
                     height = bmp.getHeight();
                     shouldRotate = (sz.width > sz.height && width > height) || (sz.width < sz.height && width < height);
-                } else {
+                } else
+                {
                     Log.i(LOG_TAG, "Cache image to get exif.");
 
-                    try {
+                    try
+                    {
                         String tmpFilename = getContext().getExternalCacheDir() + "/picture_cache000.jpg";
                         FileOutputStream fileout = new FileOutputStream(tmpFilename);
                         BufferedOutputStream bufferOutStream = new BufferedOutputStream(fileout);
@@ -720,7 +826,8 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
                         ExifInterface exifInterface = new ExifInterface(tmpFilename);
                         int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
-                        switch (orientation) {
+                        switch (orientation)
+                        {
                             //被保存图片exif记录只有旋转90度， 和不旋转两种情况
                             case ExifInterface.ORIENTATION_ROTATE_90:
                                 shouldRotate = true;
@@ -734,7 +841,8 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
                         width = bmp.getWidth();
                         height = bmp.getHeight();
 
-                    } catch (IOException e) {
+                    } catch (IOException e)
+                    {
                         Log.e(LOG_TAG, "Err when saving bitmap...");
                         e.printStackTrace();
                         return;
@@ -742,7 +850,8 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
                 }
 
 
-                if (width > mMaxTextureSize || height > mMaxTextureSize) {
+                if (width > mMaxTextureSize || height > mMaxTextureSize)
+                {
                     float scaling = Math.max(width / (float) mMaxTextureSize, height / (float) mMaxTextureSize);
                     Log.i(LOG_TAG, String.format("目标尺寸(%d x %d)超过当前设备OpenGL 能够处理的最大范围(%d x %d)， 现在将图片压缩至合理大小!", width, height, mMaxTextureSize, mMaxTextureSize));
 
@@ -754,26 +863,31 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
 
                 Bitmap bmp2;
 
-                if (shouldRotate) {
+                if (shouldRotate)
+                {
                     bmp2 = Bitmap.createBitmap(height, width, Bitmap.Config.ARGB_8888);
 
                     Canvas canvas = new Canvas(bmp2);
 
-                    if (cameraInstance().getFacing() == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                    if (cameraInstance().getFacing() == Camera.CameraInfo.CAMERA_FACING_BACK)
+                    {
                         Matrix mat = new Matrix();
                         int halfLen = Math.min(width, height) / 2;
                         mat.setRotate(90, halfLen, halfLen);
                         canvas.drawBitmap(bmp, mat, null);
-                    } else {
+                    } else
+                    {
                         Matrix mat = new Matrix();
 
-                        if (isFrontMirror) {
+                        if (isFrontMirror)
+                        {
                             mat.postTranslate(-width / 2, -height / 2);
                             mat.postScale(-1.0f, 1.0f);
                             mat.postTranslate(width / 2, height / 2);
                             int halfLen = Math.min(width, height) / 2;
                             mat.postRotate(90, halfLen, halfLen);
-                        } else {
+                        } else
+                        {
                             int halfLen = Math.max(width, height) / 2;
                             mat.postRotate(-90, halfLen, halfLen);
                         }
@@ -782,19 +896,24 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
                     }
 
                     bmp.recycle();
-                } else {
-                    if (cameraInstance().getFacing() == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                } else
+                {
+                    if (cameraInstance().getFacing() == Camera.CameraInfo.CAMERA_FACING_BACK)
+                    {
                         bmp2 = bmp;
-                    } else {
+                    } else
+                    {
 
                         bmp2 = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
                         Canvas canvas = new Canvas(bmp2);
                         Matrix mat = new Matrix();
-                        if (isFrontMirror) {
+                        if (isFrontMirror)
+                        {
                             mat.postTranslate(-width / 2, -height / 2);
                             mat.postScale(1.0f, -1.0f);
                             mat.postTranslate(width / 2, height / 2);
-                        } else {
+                        } else
+                        {
                             mat.postTranslate(-width / 2, -height / 2);
                             mat.postScale(-1.0f, -1.0f);
                             mat.postTranslate(width / 2, height / 2);
@@ -805,7 +924,8 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
 
                 }
 
-                if (config != null) {
+                if (config != null)
+                {
                     CGENativeLibrary.filterImage_MultipleEffectsWriteBack(bmp2, config, intensity);
                 }
 

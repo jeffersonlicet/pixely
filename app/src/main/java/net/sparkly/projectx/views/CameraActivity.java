@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -40,9 +41,15 @@ import net.sparkly.projectx.views.widgets.FocusMarkerLayout;
 import org.wysaid.camera.CameraInstance;
 import org.wysaid.nativePort.CGENativeLibrary;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import butterknife.BindView;
@@ -58,7 +65,7 @@ public class CameraActivity extends AppCompatActivity
 
     private boolean isFilteringEnabled;
     private List<Integer> selectedCameraModes = new ArrayList<>();
-
+    private boolean canTakePicture;
     List<SingleModeItem> modes = new ArrayList<>();
 
     //Adapters here
@@ -142,7 +149,7 @@ public class CameraActivity extends AppCompatActivity
             ex.printStackTrace();
         }
 
-        modes.add(new SingleModeItem(0, "Square"));
+        modes.add(new SingleModeItem(0, "Gif"));
         modes.add(new SingleModeItem(1, "Portrait"));
         modes.add(new SingleModeItem(2, "Video"));
 
@@ -160,9 +167,7 @@ public class CameraActivity extends AppCompatActivity
             @Override
             public void run()
             {
-                //modeSelector.getChildAt(1).setSelected(true);
                 modeSelector.smoothScrollToPosition(1);
-                //selectedCameraModes.add(1);
             }
         });
 
@@ -173,13 +178,6 @@ public class CameraActivity extends AppCompatActivity
             {
                 if (viewHolder != null)
                 {
-                    if(adapterPosition == 0)
-                    {
-                        surfaceView.setFitFullView(false);
-                    } else {
-                        surfaceView.setFitFullView(true);
-                    }
-
                     viewHolder.itemView.setSelected(true);
 
                     for (int i : selectedCameraModes)
@@ -196,10 +194,59 @@ public class CameraActivity extends AppCompatActivity
 
                     selectedCameraModes.clear();
                     selectedCameraModes.add(adapterPosition);
+                    if (isFilteringEnabled)
+                    {
+                        surfaceView.takePicture(new CustomSurfaceView.TakePictureCallback()
+                        {
+                            @Override
+                            public void takePictureOK(Bitmap bmp)
+                            {File mediaStorageDir;
+                                String state = Environment.getExternalStorageState();
+
+                                if (Environment.MEDIA_MOUNTED.equals(state)) {
+                                    mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                                            Environment.DIRECTORY_PICTURES),
+                                            "" + "ProjectX"
+                                    );
+                                } else {
+                                    mediaStorageDir = new File(
+                                            Environment.getExternalStoragePublicDirectory(
+                                                    Environment.DIRECTORY_PICTURES),
+                                            "" + "ProjectX"
+                                    );
+                                }
+
+                                if (!mediaStorageDir.exists()) {
+                                    if (!mediaStorageDir.mkdirs()) {
+                                        return;
+                                    }
+                                }
+
+                                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                                File mediaFile = new File(mediaStorageDir.getPath() + File.separator + "IMG_" + timeStamp + ".jpg");
+
+                                try
+                                {
+                                    FileOutputStream fos = new FileOutputStream(mediaFile);
+                                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                                    bmp.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                                    fos.write(out.toByteArray());
+                                    fos.close();
+                                } catch (FileNotFoundException e)
+                                {
+                                    e.printStackTrace();
+                                } catch (IOException e)
+                                {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }, null, "@curve G(0, 35)(255, 255)B(0, 133)(255, 255) @adjust brightness 0.03 @adjust contrast 1.35 @curve G(0, 13)(255, 255)B(88, 0)(255, 255) @adjust brightness -0.04 @adjust contrast 0.8 @pixblend multiply 250 223 182 255 100", 0.5f, false);
+                    }
                 }
             }
         });
 
+        surfaceView.requestPortrait();
 
     }
 
