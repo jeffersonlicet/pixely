@@ -31,10 +31,11 @@ import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
 import org.wysaid.view.CameraGLSurfaceView;
 
 
-public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener
+public class CameraSurfaceView extends GLSurfaceView implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener
 {
 
     private static final int BACK_CAMERA = 0;
@@ -351,7 +352,7 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
         }
     }
 
-    public CustomSurfaceView(Context context, AttributeSet attrs)
+    public CameraSurfaceView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
         Log.i(LOG_TAG, "MyGLSurfaceView Construct...");
@@ -381,29 +382,21 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
             {
                 Log.e(LOG_TAG, "La camara esta siendo usada");
             }
+            Camera.Size bestPreviewSize = getBestPreviewSize(cameraInstance().getParams());
 
-            List<Camera.Size> previewSizes = cameraInstance().getParams().getSupportedPreviewSizes();
-
-            int index = 0;
-            int max = 0;
-
-            for (int i = 0; i < previewSizes.size(); i++)
-            {
-                Camera.Size size = previewSizes.get(i);
-                int actual = size.width * size.width;
-                if (actual > max)
-                {
-                    max = actual;
-                    index = i;
-                }
-            }
-            Camera.Size finalSize = previewSizes.get(index);
-            Log.d(LOG_TAG, finalSize.width + " final width");
-            Log.d(LOG_TAG, finalSize.height + " final height");
+            Log.d(LOG_TAG, bestPreviewSize.width + " best preview width");
+            Log.d(LOG_TAG, bestPreviewSize.height + " best preview  height");
 
             //Invert due to portrait mode
-            mRecordWidth = finalSize.height;
-            mRecordHeight = finalSize.width;
+            mRecordWidth = bestPreviewSize.height;
+            mRecordHeight = bestPreviewSize.width;
+
+
+            Camera.Size bestPictureSize = getBestPictureSize(cameraInstance().getParams());
+            setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
+            Log.d(LOG_TAG, bestPictureSize.width + " best picture width");
+            Log.d(LOG_TAG, bestPictureSize.height + " best picture  height");
+
         }
 
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
@@ -414,6 +407,7 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
 
         GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, texSize, 0);
         mMaxTextureSize = texSize[0];
+        Log.d(LOG_TAG, "Max textureSize" + mMaxTextureSize);
 
         mTextureID = Common.genSurfaceTextureID();
         mSurfaceTexture = new SurfaceTexture(mTextureID);
@@ -756,7 +750,7 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
 
     public void setPictureSize(int width, int height, boolean isBigger)
     {
-        cameraInstance().setPictureSize(height, width, isBigger);
+        cameraInstance().setPictureSize(width, height, isBigger);
     }
 
     public synchronized void takePicture(final TakePictureCallback photoCallback, Camera.ShutterCallback shutterCallback, final String config, final float intensity, final boolean isFrontMirror)
@@ -781,10 +775,7 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
         } catch (Exception e)
         {
             Log.e(LOG_TAG, "Error when takePicture: " + e.toString());
-            if (photoCallback != null)
-            {
-                photoCallback.takePictureOK(null);
-            }
+            photoCallback.takePictureOK(null);
             return;
         }
 
@@ -796,6 +787,7 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
 
                 Camera.Parameters params = camera.getParameters();
                 Camera.Size sz = params.getPictureSize();
+                Log.e(LOG_TAG, "Width taken: " + sz.width + " height taken:" + sz.height);
 
                 boolean shouldRotate;
 
@@ -934,5 +926,49 @@ public class CustomSurfaceView extends GLSurfaceView implements GLSurfaceView.Re
                 cameraInstance().getCameraDevice().startPreview();
             }
         });
+    }
+
+    private Camera.Size getBestPictureSize(Camera.Parameters parameters)
+    {
+        int max = 0;
+        int index = 0;
+
+        List<Camera.Size> sizes = parameters.getSupportedPictureSizes();
+
+        for (int i = 0; i < sizes.size(); i++)
+        {
+            Camera.Size s = sizes.get(i);
+
+            int size = s.height * s.width;
+            if (size > max)
+            {
+                index = i;
+                max = size;
+            }
+        }
+
+        return sizes.get(index);
+    }
+
+    private Camera.Size getBestPreviewSize(Camera.Parameters parameters)
+    {
+        int max = 0;
+        int index = 0;
+
+        List<Camera.Size> sizes = parameters.getSupportedPreviewSizes();
+
+        for (int i = 0; i < sizes.size(); i++)
+        {
+            Camera.Size s = sizes.get(i);
+
+            int size = s.height * s.width;
+            if (size > max)
+            {
+                index = i;
+                max = size;
+            }
+        }
+
+        return sizes.get(index);
     }
 }
