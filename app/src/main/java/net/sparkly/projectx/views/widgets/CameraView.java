@@ -272,6 +272,50 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
         {
             mIsCameraBackForward = true;
         } else mIsCameraBackForward = false;
+
+        //cameraInstance().stopCamera();
+        //resumePreview();
+    }
+
+    public synchronized void resumePreview()
+    {
+
+        if (mFrameRecorder == null)
+        {
+            Log.e(TAG, "resumePreview after release!!");
+            return;
+        }
+
+        if (!cameraInstance().isCameraOpened())
+        {
+            int facing = mIsCameraBackForward ? Camera.CameraInfo.CAMERA_FACING_BACK :
+                    Camera.CameraInfo.CAMERA_FACING_FRONT;
+
+            if (!cameraInstance().tryOpenCamera(null, facing))
+            {
+                Log.e(TAG, "Error opening camera");
+                //TODO ABORT ALL
+            }
+
+            Camera.Size bestPreviewSize = getBestPreviewSize(cameraInstance().getParams());
+
+            Log.d(TAG, bestPreviewSize.width + " best preview width");
+            Log.d(TAG, bestPreviewSize.height + " best preview  height");
+
+            cameraInstance().setPreferPreviewSize(bestPreviewSize.height, bestPreviewSize.width);
+
+            mRecordWidth = bestPreviewSize.height;
+            mRecordHeight = bestPreviewSize.width;
+
+            Camera.Size bestPictureSize = getBestPictureSize(cameraInstance().getParams());
+            cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
+
+            Log.d(TAG, bestPictureSize.width + " best picture width");
+            Log.d(TAG, bestPictureSize.height + " best picture  height");
+        }
+
+
+        requestRender();
     }
 
     public void focusAtPoint(float x, float y, Camera.AutoFocusCallback focusCallback)

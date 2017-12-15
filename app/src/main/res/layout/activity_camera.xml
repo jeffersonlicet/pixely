@@ -15,14 +15,81 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="20dp">
 
         <com.yarolegovich.discretescrollview.DiscreteScrollView
             android:id="@+id/modeSelector"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="22dp"
+            android:layout_marginBottom="30dp"
             android:layout_marginLeft="40dp"
             android:layout_marginRight="40dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:orientation="horizontal"
+            android:weightSum="3"
+            android:baselineAligned="false">
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1">
+
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:id="@+id/toggleFlash"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_flash_auto_white_36dp"
+                    tools:ignore="ContentDescription" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="58dp"
+                    android:layout_height="58dp"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/camera_shutter_outside"
+                    tools:ignore="ContentDescription" />
+
+                <ImageView
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/camera_shutter_inside_states"
+                    tools:ignore="ContentDescription" />
+
+            </RelativeLayout>
+
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1">
+
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:id="@+id/toggleCamera"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_camera_front_white_36dp"
+                    tools:ignore="ContentDescription" />
+            </RelativeLayout>
+
+        </LinearLayout>
     </LinearLayout>
 </RelativeLayout>

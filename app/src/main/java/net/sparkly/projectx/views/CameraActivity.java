@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 
 import com.yarolegovich.discretescrollview.DiscreteScrollView;
@@ -48,11 +49,13 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class CameraActivity extends AppCompatActivity
 {
     private static final int BACK_CAMERA     = 0;
     private static final int FRONTAL_CAMERA  = 1;
+    private int actualCamera;
     private static final String TAG          = CameraActivity.class.getSimpleName();
 
     private boolean canTakePicture;
@@ -74,6 +77,44 @@ public class CameraActivity extends AppCompatActivity
 
     @BindView(R.id.modeSelector)
     DiscreteScrollView modeSelector;
+
+    @BindView(R.id.toggleFlash)
+    ImageButton toggleFlashIcon;
+
+    @BindView(R.id.toggleCamera)
+    ImageButton toggleCameraIcon;
+
+    @OnClick({R.id.toggleFlash, R.id.toggleCamera})
+    public void clickManager(View view)
+    {
+        switch(view.getId())
+        {
+            case R.id.toggleFlash:
+                break;
+            case R.id.toggleCamera:
+                toggleCamera();
+                break;
+        }
+    }
+
+    private void toggleCamera()
+    {
+        try
+        {
+            actualCamera = actualCamera == BACK_CAMERA ? FRONTAL_CAMERA : BACK_CAMERA;
+
+            toggleCameraIcon.setImageDrawable(getResources().getDrawable(actualCamera == BACK_CAMERA ? R.drawable.ic_camera_front_white_36dp : R.drawable.ic_camera_rear_white_36dp));
+            toggleFlashIcon.setVisibility(actualCamera == BACK_CAMERA ? View.VISIBLE : View.GONE);
+
+            surfaceView.setCameraFacing(actualCamera);
+            surfaceView.onPause();
+            surfaceView.onResume();
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+    }
 
     public CGENativeLibrary.LoadImageCallback mLoadImageCallback = new CGENativeLibrary.LoadImageCallback()
     {
@@ -168,8 +209,6 @@ public class CameraActivity extends AppCompatActivity
             {
                 if (viewHolder != null)
                 {
-                    viewHolder.itemView.setSelected(true);
-
                     for (int i : selectedCameraModes)
                     {
                         try
@@ -184,6 +223,8 @@ public class CameraActivity extends AppCompatActivity
 
                     selectedCameraModes.clear();
                     selectedCameraModes.add(adapterPosition);
+                    viewHolder.itemView.setSelected(true);
+
                     if (isFilteringEnabled)
                     {
                         /*surfaceView.takePicture(new CameraSurfaceView.TakePictureCallback()
@@ -300,6 +341,16 @@ public class CameraActivity extends AppCompatActivity
     {
         super.onResume();
         surfaceView.onResume();
+
+        modeSelector.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                modeSelector.smoothScrollToPosition(1);
+            }
+        });
+
     }
 
     @SuppressLint("ClickableViewAccessibility")
