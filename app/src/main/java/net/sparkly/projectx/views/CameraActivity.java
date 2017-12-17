@@ -1,5 +1,7 @@
 package net.sparkly.projectx.views;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.AssetManager;
@@ -9,6 +11,8 @@ import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
@@ -20,6 +24,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
 import com.yarolegovich.discretescrollview.DiscreteScrollView;
@@ -29,6 +34,7 @@ import com.yarolegovich.discretescrollview.transform.ScaleTransformer;
 import net.sparkly.projectx.R;
 import net.sparkly.projectx.adapters.ModeListAdapter;
 import net.sparkly.projectx.models.SingleModeItem;
+import net.sparkly.projectx.utils.StorageManager;
 import net.sparkly.projectx.views.widgets.CameraSurfaceView;
 import net.sparkly.projectx.views.widgets.CameraView;
 import net.sparkly.projectx.views.widgets.FocusMarkerLayout;
@@ -42,6 +48,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -53,13 +60,22 @@ import butterknife.OnClick;
 
 public class CameraActivity extends AppCompatActivity
 {
-    private static final int BACK_CAMERA     = 0;
-    private static final int FRONTAL_CAMERA  = 1;
+    private static final String TAG = CameraActivity.class.getSimpleName();
+
+    private static final int BACK_CAMERA = 0;
+    private static final int FRONTAL_CAMERA = 1;
+    private static final int FLASH_OFF = 0;
+    private static final int FLASH_ON = 1;
+    private static final int FLASH_AUTO = 2;
+
+    private int actualFlash;
     private int actualCamera;
-    private static final String TAG          = CameraActivity.class.getSimpleName();
 
     private boolean canTakePicture;
     private boolean isFilteringEnabled;
+    private boolean pendingToggleFlash;
+    private boolean pendingToggleCamera;
+    private boolean pendingTakePicture;
 
     private ModeListAdapter adapter;
     private List<SingleModeItem> modes = new ArrayList<>();
@@ -68,6 +84,7 @@ public class CameraActivity extends AppCompatActivity
     private Activity mActivity;
     private GestureDetectorCompat mDetector;
     private FocusMarkerLayout focusMarkerLayout;
+    private StorageManager storageManager;
 
     @BindView(R.id.surfaceView)
     CameraView surfaceView;
@@ -84,21 +101,124 @@ public class CameraActivity extends AppCompatActivity
     @BindView(R.id.toggleCamera)
     ImageButton toggleCameraIcon;
 
-    @OnClick({R.id.toggleFlash, R.id.toggleCamera})
+    @BindView(R.id.cameraShutter)
+    RelativeLayout cameraShutter;
+
+    @BindView(R.id.photoThumbnail)
+    ImageView photoThumbnail;
+
+    @OnClick({R.id.toggleFlash, R.id.toggleCamera, R.id.cameraShutter})
     public void clickManager(View view)
     {
-        switch(view.getId())
+        switch (view.getId())
         {
             case R.id.toggleFlash:
+                toggleFlash();
                 break;
             case R.id.toggleCamera:
                 toggleCamera();
                 break;
+
+            case R.id.cameraShutter:
+                takePicture();
+                break;
         }
+    }
+
+    private void takePicture()
+    {
+        if(!canTakePicture) return;
+
+        pendingTakePicture = true;
+
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                surfaceView.takeShot(new CameraSurfaceView.TakePictureCallback()
+                {
+                    @Override
+                    public void takePictureOK(final Bitmap bmp)
+                    {
+                        mActivity.runOnUiThread(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                RoundedBitmapDrawable roundedBitmapDrawable= RoundedBitmapDrawableFactory.create(getResources(), bmp);
+                                roundedBitmapDrawable.setCircular(true);
+                                roundedBitmapDrawable.setAntiAlias(true);
+                                photoThumbnail.setImageDrawable(roundedBitmapDrawable);
+                                animateThumbnail();
+                                Log.d(TAG, bmp.getHeight() + " height and " + bmp.getWidth() + " width");
+                            }
+                        });
+
+                    }
+                }, true);
+
+                surfaceView.takePicture(new CameraSurfaceView.TakePictureCallback()
+                {
+                    @Override
+                    public void takePictureOK(Bitmap bmp)
+                    {
+                        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                        String name =  File.separator + "IMG_" + timeStamp + ".jpg";
+                        storageManager.createFile(name, bmp);
+                        pendingTakePicture = false;
+                    }
+
+                }, null, null, 1, false);
+            }
+        }).start();
+    }
+
+    private void toggleFlash()
+    {
+        if (pendingToggleFlash)
+            return;
+
+        pendingToggleFlash = true;
+        int flashBackup = actualFlash;
+        int drawable = 0;
+
+        switch (actualFlash)
+        {
+            case FLASH_OFF:
+                actualFlash = FLASH_ON;
+                drawable = R.drawable.ic_flash_on_white_36dp;
+                break;
+
+            case FLASH_ON:
+                actualFlash = FLASH_AUTO;
+                drawable = R.drawable.ic_flash_auto_white_36dp;
+                break;
+            case FLASH_AUTO:
+                actualFlash = FLASH_OFF;
+                drawable = R.drawable.ic_flash_off_white_36dp;
+                break;
+        }
+
+        boolean response = surfaceView.setFlashLightMode(actualFlash);
+
+        if (response)
+            toggleFlashIcon.setImageDrawable(getResources().getDrawable(drawable));
+
+
+        else
+            actualFlash = flashBackup;
+
+        pendingToggleFlash = false;
     }
 
     private void toggleCamera()
     {
+        if (pendingToggleCamera)
+            return;
+
+        pendingToggleCamera = true;
+
         try
         {
             actualCamera = actualCamera == BACK_CAMERA ? FRONTAL_CAMERA : BACK_CAMERA;
@@ -109,11 +229,12 @@ public class CameraActivity extends AppCompatActivity
             surfaceView.setCameraFacing(actualCamera);
             surfaceView.onPause();
             surfaceView.onResume();
-        }
-        catch (Exception ex)
+        } catch (Exception ex)
         {
             ex.printStackTrace();
         }
+
+        pendingToggleCamera = false;
     }
 
     public CGENativeLibrary.LoadImageCallback mLoadImageCallback = new CGENativeLibrary.LoadImageCallback()
@@ -168,6 +289,14 @@ public class CameraActivity extends AppCompatActivity
         relativeWrapper.setClickable(false);
 
         mActivity = this;
+
+        try {
+            storageManager = new StorageManager(this);
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
 
         try
         {
@@ -272,13 +401,38 @@ public class CameraActivity extends AppCompatActivity
                                 }
                             }
                         }, null, "@curve G(0, 35)(255, 255)B(0, 133)(255, 255) @adjust brightness 0.03 @adjust contrast 1.35 @curve G(0, 13)(255, 255)B(88, 0)(255, 255) @adjust brightness -0.04 @adjust contrast 0.8 @pixblend multiply 250 223 182 255 100", 0.5f, false);
-                    */}
+                    */
+                    }
                 }
             }
         });
 
         //surfaceView.requestPortrait();
 
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        CameraInstance.getInstance().stopCamera();
+        surfaceView.release(null);
+        surfaceView.onPause();
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        surfaceView.onResume();
+        modeSelector.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                modeSelector.smoothScrollToPosition(1);
+            }
+        });
     }
 
     private void performSwipeRight()
@@ -327,35 +481,26 @@ public class CameraActivity extends AppCompatActivity
         });
     }
 
-    @Override
-    public void onPause()
+    private void animateThumbnail()
     {
-        super.onPause();
-        CameraInstance.getInstance().stopCamera();
-        surfaceView.release(null);
-        surfaceView.onPause();
-    }
-
-    @Override
-    public void onResume()
-    {
-        super.onResume();
-        surfaceView.onResume();
-
-        modeSelector.post(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                modeSelector.smoothScrollToPosition(1);
-            }
-        });
+        photoThumbnail.animate().setListener(null).cancel();
+        photoThumbnail.setScaleX(2f);
+        photoThumbnail.setScaleY(2f);
+        photoThumbnail.setAlpha(0.3f);
+        photoThumbnail.animate().alpha(1f).scaleX(1).scaleY(1).setStartDelay(0).setDuration(330)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                    }
+                }).start();
 
     }
 
     @SuppressLint("ClickableViewAccessibility")
     private void buildCamera()
     {
+        surfaceView.setStorageManager(storageManager);
         surfaceView.setCameraFacing(BACK_CAMERA);
 
         surfaceView.setOnCreateCallback(new CameraView.OnCreateCallback()
@@ -364,19 +509,9 @@ public class CameraActivity extends AppCompatActivity
             public void createOver(boolean success)
             {
                 isFilteringEnabled = true;
+                canTakePicture = true;
             }
         });
-
-
-        /*surfaceView.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View arg0)
-            {
-                //Toast.makeText(getApplicationContext(), " simple touch", Toast.LENGTH_SHORT).show();
-
-            }
-        });*/
 
         surfaceView.setOnTouchListener(new View.OnTouchListener()
         {
@@ -387,9 +522,7 @@ public class CameraActivity extends AppCompatActivity
                 return true;
             }
         });
-
     }
-
 
     private class CameraGestureListener extends GestureDetector.SimpleOnGestureListener
     {
