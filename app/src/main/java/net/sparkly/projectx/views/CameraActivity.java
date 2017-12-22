@@ -32,7 +32,9 @@ import com.yarolegovich.discretescrollview.Orientation;
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer;
 
 import net.sparkly.projectx.R;
+import net.sparkly.projectx.adapters.FilterListAdapter;
 import net.sparkly.projectx.adapters.ModeListAdapter;
+import net.sparkly.projectx.models.FilterItem;
 import net.sparkly.projectx.models.SingleModeItem;
 import net.sparkly.projectx.utils.StorageManager;
 import net.sparkly.projectx.views.widgets.CameraSurfaceView;
@@ -75,11 +77,14 @@ public class CameraActivity extends AppCompatActivity
     private boolean isFilteringEnabled;
     private boolean pendingToggleFlash;
     private boolean pendingToggleCamera;
-    private boolean pendingTakePicture;
 
     private ModeListAdapter adapter;
+    private FilterListAdapter filtersAdapter;
+
     private List<SingleModeItem> modes = new ArrayList<>();
+    private List<FilterItem> filters = new ArrayList<>();
     private List<Integer> selectedCameraModes = new ArrayList<>();
+    private List<Integer> selectedFilter;
 
     private Activity mActivity;
     private GestureDetectorCompat mDetector;
@@ -95,6 +100,9 @@ public class CameraActivity extends AppCompatActivity
     @BindView(R.id.modeSelector)
     DiscreteScrollView modeSelector;
 
+    @BindView(R.id.filterSelector)
+    DiscreteScrollView filterSelector;
+
     @BindView(R.id.toggleFlash)
     ImageButton toggleFlashIcon;
 
@@ -106,6 +114,9 @@ public class CameraActivity extends AppCompatActivity
 
     @BindView(R.id.photoThumbnail)
     ImageView photoThumbnail;
+
+    @BindView(R.id.photoThumbnailBorder)
+    View photoThumbnailBorder;
 
     @OnClick({R.id.toggleFlash, R.id.toggleCamera, R.id.cameraShutter})
     public void clickManager(View view)
@@ -120,53 +131,51 @@ public class CameraActivity extends AppCompatActivity
                 break;
 
             case R.id.cameraShutter:
-                takePicture();
+                //takePicture();
                 break;
         }
     }
 
     private void takePicture()
     {
-        if(!canTakePicture) return;
-
-        pendingTakePicture = true;
+        if (!canTakePicture) return;
 
         new Thread(new Runnable()
         {
             @Override
             public void run()
             {
-                surfaceView.takeShot(new CameraSurfaceView.TakePictureCallback()
-                {
-                    @Override
-                    public void takePictureOK(final Bitmap bmp)
-                    {
-                        mActivity.runOnUiThread(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                RoundedBitmapDrawable roundedBitmapDrawable= RoundedBitmapDrawableFactory.create(getResources(), bmp);
-                                roundedBitmapDrawable.setCircular(true);
-                                roundedBitmapDrawable.setAntiAlias(true);
-                                photoThumbnail.setImageDrawable(roundedBitmapDrawable);
-                                animateThumbnail();
-                                Log.d(TAG, bmp.getHeight() + " height and " + bmp.getWidth() + " width");
-                            }
-                        });
-
-                    }
-                }, true);
-
                 surfaceView.takePicture(new CameraSurfaceView.TakePictureCallback()
                 {
                     @Override
                     public void takePictureOK(Bitmap bmp)
                     {
-                        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                        String name =  File.separator + "IMG_" + timeStamp + ".jpg";
+                        surfaceView.takeShot(new CameraSurfaceView.TakePictureCallback()
+                        {
+                            @Override
+                            public void takePictureOK(final Bitmap bmp)
+                            {
+                                mActivity.runOnUiThread(new Runnable()
+                                {
+                                    @Override
+                                    public void run()
+                                    {
+                                        RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(getResources(), bmp);
+                                        roundedBitmapDrawable.setCircular(true);
+                                        roundedBitmapDrawable.setAntiAlias(true);
+                                        photoThumbnail.setImageDrawable(roundedBitmapDrawable);
+                                        animateThumbnail();
+                                        Log.d(TAG, bmp.getHeight() + " height and " + bmp.getWidth() + " width");
+                                    }
+                                });
+
+                            }
+                        }, true);
+
+                        @SuppressLint("SimpleDateFormat") String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                        String name = File.separator + "IMG_" + timeStamp + ".jpg";
                         storageManager.createFile(name, bmp);
-                        pendingTakePicture = false;
+
                     }
 
                 }, null, null, 1, false);
@@ -187,16 +196,16 @@ public class CameraActivity extends AppCompatActivity
         {
             case FLASH_OFF:
                 actualFlash = FLASH_ON;
-                drawable = R.drawable.ic_flash_on_white_36dp;
+                drawable = R.drawable.ic_flash_on_white_24dp;
                 break;
 
             case FLASH_ON:
                 actualFlash = FLASH_AUTO;
-                drawable = R.drawable.ic_flash_auto_white_36dp;
+                drawable = R.drawable.ic_flash_auto_white_24dp;
                 break;
             case FLASH_AUTO:
                 actualFlash = FLASH_OFF;
-                drawable = R.drawable.ic_flash_off_white_36dp;
+                drawable = R.drawable.ic_flash_off_white_24dp;
                 break;
         }
 
@@ -223,7 +232,7 @@ public class CameraActivity extends AppCompatActivity
         {
             actualCamera = actualCamera == BACK_CAMERA ? FRONTAL_CAMERA : BACK_CAMERA;
 
-            toggleCameraIcon.setImageDrawable(getResources().getDrawable(actualCamera == BACK_CAMERA ? R.drawable.ic_camera_front_white_36dp : R.drawable.ic_camera_rear_white_36dp));
+            toggleCameraIcon.setImageDrawable(getResources().getDrawable(actualCamera == BACK_CAMERA ? R.drawable.ic_camera_front_white_24dp : R.drawable.ic_camera_rear_white_24dp));
             toggleFlashIcon.setVisibility(actualCamera == BACK_CAMERA ? View.VISIBLE : View.GONE);
 
             surfaceView.setCameraFacing(actualCamera);
@@ -290,10 +299,10 @@ public class CameraActivity extends AppCompatActivity
 
         mActivity = this;
 
-        try {
+        try
+        {
             storageManager = new StorageManager(this);
-        }
-        catch (Exception ex)
+        } catch (Exception ex)
         {
             ex.printStackTrace();
         }
@@ -315,7 +324,7 @@ public class CameraActivity extends AppCompatActivity
 
         adapter = new ModeListAdapter(this, modes, modeSelector, selectedCameraModes);
         modeSelector.setOrientation(Orientation.HORIZONTAL);
-        modeSelector.setAdapter((adapter));
+        modeSelector.setAdapter(adapter);
         modeSelector.setItemTransitionTimeMillis(30);
         modeSelector.setItemTransformer(new ScaleTransformer.Builder()
                 .setMinScale(0.7f)
@@ -331,84 +340,40 @@ public class CameraActivity extends AppCompatActivity
             }
         });
 
-        modeSelector.addOnItemChangedListener(new DiscreteScrollView.OnItemChangedListener<RecyclerView.ViewHolder>()
+        modeSelector.addOnItemChangedListener(new onModeChangedListener());
+
+        filters.add(new FilterItem(0, "", 0, R.drawable.thumbnail_border));
+        filters.add(new FilterItem(1, getString(R.string.filter0), getResources().getInteger(R.integer.intensityFilter0), R.drawable.thumbnail_border));
+        filters.add(new FilterItem(2, "", 0, R.drawable.thumbnail_border));
+
+        filtersAdapter = new FilterListAdapter(this, filters, filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener()
         {
             @Override
-            public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder, int adapterPosition)
+            public void onClickSelectedItemListener(int selected)
             {
-                if (viewHolder != null)
-                {
-                    for (int i : selectedCameraModes)
-                    {
-                        try
-                        {
-                            modeSelector.getViewHolder(i).itemView.setSelected(false);
-
-                        } catch (Exception ex)
-                        {
-                            ex.printStackTrace();
-                        }
-                    }
-
-                    selectedCameraModes.clear();
-                    selectedCameraModes.add(adapterPosition);
-                    viewHolder.itemView.setSelected(true);
-
-                    if (isFilteringEnabled)
-                    {
-                        /*surfaceView.takePicture(new CameraSurfaceView.TakePictureCallback()
-                        {
-                            @Override
-                            public void takePictureOK(Bitmap bmp)
-                            {File mediaStorageDir;
-                                String state = Environment.getExternalStorageState();
-
-                                if (Environment.MEDIA_MOUNTED.equals(state)) {
-                                    mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                                            Environment.DIRECTORY_PICTURES),
-                                            "" + "ProjectX"
-                                    );
-                                } else {
-                                    mediaStorageDir = new File(
-                                            Environment.getExternalStoragePublicDirectory(
-                                                    Environment.DIRECTORY_PICTURES),
-                                            "" + "ProjectX"
-                                    );
-                                }
-
-                                if (!mediaStorageDir.exists()) {
-                                    if (!mediaStorageDir.mkdirs()) {
-                                        return;
-                                    }
-                                }
-
-                                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                                File mediaFile = new File(mediaStorageDir.getPath() + File.separator + "IMG_" + timeStamp + ".jpg");
-
-                                try
-                                {
-                                    FileOutputStream fos = new FileOutputStream(mediaFile);
-                                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                                    bmp.compress(Bitmap.CompressFormat.JPEG, 100, out);
-                                    fos.write(out.toByteArray());
-                                    fos.close();
-                                } catch (FileNotFoundException e)
-                                {
-                                    e.printStackTrace();
-                                } catch (IOException e)
-                                {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }, null, "@curve G(0, 35)(255, 255)B(0, 133)(255, 255) @adjust brightness 0.03 @adjust contrast 1.35 @curve G(0, 13)(255, 255)B(88, 0)(255, 255) @adjust brightness -0.04 @adjust contrast 0.8 @pixblend multiply 250 223 182 255 100", 0.5f, false);
-                    */
-                    }
-                }
+                takePicture();
             }
         });
 
-        //surfaceView.requestPortrait();
+        filterSelector.setOrientation(Orientation.HORIZONTAL);
+        filterSelector.setAdapter(filtersAdapter);
+        filterSelector.setSlideOnFling(true);
+        filterSelector.setSlideOnFlingThreshold(1800);
+        filterSelector.setItemTransitionTimeMillis(30);
 
+        filterSelector.setItemTransformer(new ScaleTransformer.Builder()
+                .setMaxScale(1.00f)
+                .setMinScale(0.8f)
+                .build());
+
+        filterSelector.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                filterSelector.smoothScrollToPosition(0);
+            }
+        });
     }
 
     @Override
@@ -437,12 +402,17 @@ public class CameraActivity extends AppCompatActivity
 
     private void performSwipeRight()
     {
-
+        int previous = filterSelector.getCurrentItem() - 1;
+        if(previous >= 0)
+            filterSelector.smoothScrollToPosition(previous);
     }
 
     private void performSwipeLeft()
     {
-        surfaceView.setFilterWithConfig("@curve G(0, 35)(255, 255)B(0, 133)(255, 255) @adjust brightness 0.03 @adjust contrast 1.35 @curve G(0, 13)(255, 255)B(88, 0)(255, 255) @adjust brightness -0.04 @adjust contrast 0.8 @pixblend multiply 250 223 182 255 100");
+        int next = filterSelector.getCurrentItem() + 1;
+        if(next < filtersAdapter.getItemCount())
+            filterSelector.smoothScrollToPosition(next);
+        //surfaceView.setFilterWithConfig("@curve G(0, 35)(255, 255)B(0, 133)(255, 255) @adjust brightness 0.03 @adjust contrast 1.35 @curve G(0, 13)(255, 255)B(88, 0)(255, 255) @adjust brightness -0.04 @adjust contrast 0.8 @pixblend multiply 250 223 182 255 100");
     }
 
     private void performSwipeTop()
@@ -483,14 +453,17 @@ public class CameraActivity extends AppCompatActivity
 
     private void animateThumbnail()
     {
+        photoThumbnailBorder.setVisibility(View.VISIBLE);
         photoThumbnail.animate().setListener(null).cancel();
         photoThumbnail.setScaleX(2f);
         photoThumbnail.setScaleY(2f);
         photoThumbnail.setAlpha(0.3f);
         photoThumbnail.animate().alpha(1f).scaleX(1).scaleY(1).setStartDelay(0).setDuration(330)
-                .setListener(new AnimatorListenerAdapter() {
+                .setListener(new AnimatorListenerAdapter()
+                {
                     @Override
-                    public void onAnimationEnd(Animator animation) {
+                    public void onAnimationEnd(Animator animation)
+                    {
                         super.onAnimationEnd(animation);
                     }
                 }).start();
@@ -580,6 +553,32 @@ public class CameraActivity extends AppCompatActivity
                 exception.printStackTrace();
             }
             return true;
+        }
+    }
+
+    private class onModeChangedListener implements DiscreteScrollView.OnItemChangedListener<RecyclerView.ViewHolder>
+    {
+        @Override
+        public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder, int adapterPosition)
+        {
+            if (viewHolder != null)
+            {
+                for (int i : selectedCameraModes)
+                {
+                    try
+                    {
+                        modeSelector.getViewHolder(i).itemView.setSelected(false);
+
+                    } catch (Exception ex)
+                    {
+                        ex.printStackTrace();
+                    }
+                }
+
+                selectedCameraModes.clear();
+                selectedCameraModes.add(adapterPosition);
+                viewHolder.itemView.setSelected(true);
+            }
         }
     }
 }

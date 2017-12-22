@@ -1,0 +1,85 @@
+package net.sparkly.projectx.adapters;
+
+import android.content.Context;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.yarolegovich.discretescrollview.DiscreteScrollView;
+
+import net.sparkly.projectx.R;
+import net.sparkly.projectx.models.FilterItem;
+import net.sparkly.projectx.models.SingleModeItem;
+
+import java.util.List;
+
+public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.ViewHolder>
+{
+    private List<FilterItem> filters;
+    private Context context;
+    private DiscreteScrollView recyclerView;
+    private List<Integer> selectedFilter;
+    private int selected;
+    private FilterItemClickListener filterItemClickListener;
+
+    public FilterListAdapter(Context context, List<FilterItem> filters,
+                             DiscreteScrollView modeSelector, List<Integer> selectedFilters, FilterItemClickListener filterItemClickListener)
+    {
+        this.context = context;
+        this.filters = filters;
+        recyclerView = modeSelector;
+        this.selectedFilter = selectedFilters;
+        this.filterItemClickListener = filterItemClickListener;
+    }
+
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
+    {
+        return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.single_filter_item, parent, false));
+    }
+
+    @Override
+    public void onBindViewHolder(final ViewHolder holder, final int position)
+    {
+        holder.filterWrapper.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (recyclerView != null)
+                {
+                    recyclerView.smoothScrollToPosition(holder.getAdapterPosition());
+                    if(selected == filters.get(holder.getAdapterPosition()).getId())
+                        filterItemClickListener.onClickSelectedItemListener(selected);
+
+                    else selected = filters.get(holder.getAdapterPosition()).getId();
+                }
+            }
+        });
+    }
+
+    @Override
+    public int getItemCount()
+    {
+        return filters == null ? 0 : filters.size();
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder
+    {
+        RelativeLayout filterWrapper;
+
+        public ViewHolder(View itemView)
+        {
+            super(itemView);
+            filterWrapper = itemView.findViewById(R.id.filterItemWrapper);
+        }
+
+    }
+
+    public interface FilterItemClickListener {
+        void onClickSelectedItemListener(int selected);
+    }
+}

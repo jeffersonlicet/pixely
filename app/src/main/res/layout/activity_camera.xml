@@ -11,49 +11,63 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
+    <com.yarolegovich.discretescrollview.DiscreteScrollView
+        android:id="@+id/modeSelector"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp">
-
-        <ImageView
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_centerInParent="true"
-            android:src="@drawable/camera_shutter_outside"
-            tools:ignore="ContentDescription" />
-
-        <ImageView
-            android:id="@+id/photoThumbnail"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:scaleType="centerCrop"
-            android:layout_centerInParent="true"
-            android:clickable="true"
-            android:focusable="true" />
-
-    </RelativeLayout>
-
+        android:layout_marginLeft="40dp"
+        android:layout_marginRight="40dp"
+        android:layout_marginTop="15dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:orientation="vertical"
-        android:paddingBottom="20dp">
+        android:orientation="vertical">
 
-        <com.yarolegovich.discretescrollview.DiscreteScrollView
-            android:id="@+id/modeSelector"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="30dp"
-            android:layout_marginLeft="40dp"
-            android:layout_marginRight="40dp" />
+            android:layout_height="wrap_content">
+
+            <RelativeLayout
+                android:id="@+id/cameraShutter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:src="@drawable/camera_shutter_outside"
+                    tools:ignore="ContentDescription" />
+
+                <ImageView
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/camera_shutter_inside_states"
+                    android:visibility="gone"
+                    tools:ignore="ContentDescription" />
+
+            </RelativeLayout>
+
+            <com.yarolegovich.discretescrollview.DiscreteScrollView
+                android:id="@+id/filterSelector"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginBottom="30dp" />
+
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?android:attr/selectableItemBackground"
             android:baselineAligned="false"
             android:orientation="horizontal"
             android:weightSum="3">
@@ -69,35 +83,42 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="20dp"
+                    android:layout_marginStart="20dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_flash_auto_white_36dp"
+                    android:src="@drawable/ic_flash_auto_white_24dp"
                     tools:ignore="ContentDescription" />
             </RelativeLayout>
 
             <RelativeLayout
-                android:id="@+id/cameraShutter"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true">
+                android:layout_height="44dp"
+                android:layout_margin="20dp"
+                android:layout_weight="1">
 
-                <ImageView
-                    android:layout_width="58dp"
-                    android:layout_height="58dp"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/camera_shutter_outside"
-                    tools:ignore="ContentDescription" />
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true">
 
-                <ImageView
-                    android:layout_width="45dp"
-                    android:layout_height="45dp"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/camera_shutter_inside_states"
-                    tools:ignore="ContentDescription" />
+                    <View
+                        android:id="@+id/photoThumbnailBorder"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:layout_centerInParent="true"
+                        android:background="@drawable/thumbnail_border"
+                        android:visibility="gone" />
 
+                    <ImageView
+                        android:id="@+id/photoThumbnail"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_centerInParent="true"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:scaleType="centerCrop"
+                        tools:ignore="ContentDescription" />
+                </RelativeLayout>
             </RelativeLayout>
-
 
             <RelativeLayout
                 android:layout_width="0dp"
@@ -114,7 +135,7 @@
                     android:layout_marginEnd="20dp"
                     android:layout_marginRight="20dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_camera_front_white_36dp"
+                    android:src="@drawable/ic_camera_front_white_24dp"
                     tools:ignore="ContentDescription" />
             </RelativeLayout>
 

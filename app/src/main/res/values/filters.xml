@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Filter 0 -->
+    <string name="filter0">
+        \@curve G(0, 35)(255, 255)B(0, 133)(255, 255)
+        \@adjust brightness 0.03
+        \@adjust contrast 1.35
+        \@curve G(0, 13)(255, 255)B(88, 0)(255, 255)
+        \@adjust brightness -0.04
+        \@adjust contrast 0.8
+        \@pixblend multiply 250 223 182 255 100</string>
+    <integer name="intensityFilter0">60</integer>
+</resources>
