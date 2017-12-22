@@ -1,10 +1,15 @@
 package net.sparkly.projectx.adapters;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -59,6 +64,20 @@ public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.Vi
                 }
             }
         });
+
+        try
+        {
+            Bitmap original = BitmapFactory.decodeResource(context.getResources(), filters.get(holder.getAdapterPosition()).getThumbnail());
+            Bitmap b = Bitmap.createScaledBitmap(original, 100, 100, false);
+
+            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(context.getResources(), b);
+            roundedBitmapDrawable.setCircular(true);
+            holder.filterItemThumbnail.setImageDrawable(roundedBitmapDrawable);
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
     }
 
     @Override
@@ -70,11 +89,13 @@ public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.Vi
     public class ViewHolder extends RecyclerView.ViewHolder
     {
         RelativeLayout filterWrapper;
+        ImageView filterItemThumbnail;
 
         public ViewHolder(View itemView)
         {
             super(itemView);
             filterWrapper = itemView.findViewById(R.id.filterItemWrapper);
+            filterItemThumbnail = itemView.findViewById(R.id.filterItemThumbnail);
         }
 
     }

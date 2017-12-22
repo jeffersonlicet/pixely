@@ -19,11 +19,58 @@
         android:layout_marginRight="40dp"
         android:layout_marginTop="15dp" />
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/photoThumbnailBorder"
+            android:layout_width="42dp"
+            android:layout_alignParentBottom="true"
+            android:layout_height="42dp"
+            android:layout_marginBottom="25dp"
+            android:layout_centerInParent="true"
+            android:clickable="true"
+            android:focusable="true"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:src="@drawable/camera_shutter_inside"
+            tools:ignore="ContentDescription" />
+
+        <ImageView
+            android:id="@+id/photoThumbnail"
+            android:layout_width="45dp"
+            android:layout_alignParentBottom="true"
+            android:layout_height="45dp"
+            android:layout_centerHorizontal="true"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="20dp"
+            android:src="@drawable/camera_shutter_inside"
+            android:scaleType="centerCrop"
+            tools:ignore="ContentDescription" />
+
+    </RelativeLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/filterIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:padding="12dp"
+            android:text="Normal"
+            android:textAlignment="center"
+            android:textAllCaps="true"
+            android:textColor="#FFF"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -95,29 +142,6 @@
                 android:layout_margin="20dp"
                 android:layout_weight="1">
 
-                <RelativeLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true">
-
-                    <View
-                        android:id="@+id/photoThumbnailBorder"
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:layout_centerInParent="true"
-                        android:background="@drawable/thumbnail_border"
-                        android:visibility="gone" />
-
-                    <ImageView
-                        android:id="@+id/photoThumbnail"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_centerInParent="true"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:scaleType="centerCrop"
-                        tools:ignore="ContentDescription" />
-                </RelativeLayout>
             </RelativeLayout>
 
             <RelativeLayout
@@ -141,4 +165,6 @@
 
         </LinearLayout>
     </LinearLayout>
+
+
 </RelativeLayout>

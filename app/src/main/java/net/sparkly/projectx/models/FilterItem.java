@@ -1,20 +1,21 @@
 package net.sparkly.projectx.models;
 
-import android.graphics.drawable.Drawable;
 
 public class FilterItem
 {
     private String params;
+    private int nameId;
     private int thumbnail;
     private int id;
     private int intensity;
 
-    public FilterItem(int i, String params, int intensity, int thumbnail)
+    public FilterItem(int filterId, int nameId, String params, int intensity, int thumbnail)
     {
-        id = i;
+        id = filterId;
         this.params = params;
         this.intensity = intensity;
         this.thumbnail  = thumbnail;
+        this.nameId = nameId;
     }
 
     public int getId()
@@ -55,5 +56,15 @@ public class FilterItem
     public void setParams(String params)
     {
         this.params = params;
+    }
+
+    public int getNameId()
+    {
+        return nameId;
+    }
+
+    public void setNameId(int nameId)
+    {
+        this.nameId = nameId;
     }
 }

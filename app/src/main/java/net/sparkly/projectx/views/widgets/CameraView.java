@@ -38,6 +38,7 @@ import javax.microedition.khronos.opengles.GL10;
 import static android.hardware.Camera.Parameters.FLASH_MODE_AUTO;
 import static android.hardware.Camera.Parameters.FLASH_MODE_OFF;
 import static android.hardware.Camera.Parameters.FLASH_MODE_ON;
+import static android.hardware.Camera.Parameters.FOCUS_MODE_AUTO;
 
 public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener
 {
@@ -327,6 +328,28 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     public void focusAtPoint(float x, float y, Camera.AutoFocusCallback focusCallback)
     {
         cameraInstance().focusAtPoint(y, 1.0f - x, focusCallback);
+    }
+
+    public void setFocusMode(String focusMode)
+    {
+        /*if(cameraInstance().getParams().getFocusMode().equals(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE))
+            return;
+
+        cameraInstance().setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);*/
+
+        Camera.Parameters mParams = cameraInstance().getParams();
+        List<String> focusModes = mParams.getSupportedFocusModes();
+
+        for(String focus : focusModes)
+        {
+            Log.d(TAG, focus +  "Focus mode");
+        }
+
+        if(focusModes.contains(focusMode)){
+            mParams.setFocusMode(focusMode);
+        }
+
+        cameraInstance().setParams(mParams);
     }
 
     public CameraInstance cameraInstance()

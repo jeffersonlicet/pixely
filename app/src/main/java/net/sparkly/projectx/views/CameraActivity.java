@@ -26,6 +26,7 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.yarolegovich.discretescrollview.DiscreteScrollView;
 import com.yarolegovich.discretescrollview.Orientation;
@@ -36,6 +37,7 @@ import net.sparkly.projectx.adapters.FilterListAdapter;
 import net.sparkly.projectx.adapters.ModeListAdapter;
 import net.sparkly.projectx.models.FilterItem;
 import net.sparkly.projectx.models.SingleModeItem;
+import net.sparkly.projectx.utils.BitmapUtils;
 import net.sparkly.projectx.utils.StorageManager;
 import net.sparkly.projectx.views.widgets.CameraSurfaceView;
 import net.sparkly.projectx.views.widgets.CameraView;
@@ -60,6 +62,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static android.hardware.Camera.Parameters.FOCUS_MODE_AUTO;
+import static android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE;
+
 public class CameraActivity extends AppCompatActivity
 {
     private static final String TAG = CameraActivity.class.getSimpleName();
@@ -72,11 +77,14 @@ public class CameraActivity extends AppCompatActivity
 
     private int actualFlash;
     private int actualCamera;
+    private float filterIntensity;
+    private String filterConfig;
 
     private boolean canTakePicture;
     private boolean isFilteringEnabled;
     private boolean pendingToggleFlash;
     private boolean pendingToggleCamera;
+    private boolean wasFocused;
 
     private ModeListAdapter adapter;
     private FilterListAdapter filtersAdapter;
@@ -90,6 +98,7 @@ public class CameraActivity extends AppCompatActivity
     private GestureDetectorCompat mDetector;
     private FocusMarkerLayout focusMarkerLayout;
     private StorageManager storageManager;
+
 
     @BindView(R.id.surfaceView)
     CameraView surfaceView;
@@ -116,7 +125,10 @@ public class CameraActivity extends AppCompatActivity
     ImageView photoThumbnail;
 
     @BindView(R.id.photoThumbnailBorder)
-    View photoThumbnailBorder;
+    ImageView photoThumbnailBorder;
+
+    @BindView(R.id.filterIndicator)
+    TextView filterIndicator;
 
     @OnClick({R.id.toggleFlash, R.id.toggleCamera, R.id.cameraShutter})
     public void clickManager(View view)
@@ -140,6 +152,42 @@ public class CameraActivity extends AppCompatActivity
     {
         if (!canTakePicture) return;
 
+        if (!wasFocused)
+        {
+            Log.d(TAG, "Trying to focus auto");
+            try
+            {
+                surfaceView.cameraInstance().getCameraDevice().cancelAutoFocus();
+                surfaceView.setFocusMode(FOCUS_MODE_AUTO);
+                surfaceView.cameraInstance().getCameraDevice().autoFocus(new Camera.AutoFocusCallback()
+                {
+                    @Override
+                    public void onAutoFocus(boolean successful, Camera camera)
+                    {
+                        if (successful)
+                        {
+                            Log.d(TAG, "Succefull");
+
+                            wasFocused = true;
+                            internalTakePicture();
+                        } else
+                        {
+                            Log.d(TAG, "Error focusing");
+
+                            takePicture();
+                        }
+                    }
+                });
+            } catch (Exception ex)
+            {
+                ex.printStackTrace();
+            }
+        } else internalTakePicture();
+
+    }
+
+    private void internalTakePicture()
+    {
         new Thread(new Runnable()
         {
             @Override
@@ -160,9 +208,12 @@ public class CameraActivity extends AppCompatActivity
                                     @Override
                                     public void run()
                                     {
-                                        RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(getResources(), bmp);
+                                        Bitmap b = Bitmap.createScaledBitmap(bmp, 120, 120, false);
+                                        RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(getResources(), b);
                                         roundedBitmapDrawable.setCircular(true);
-                                        roundedBitmapDrawable.setAntiAlias(true);
+                                        bmp.recycle();
+                                        b.recycle();
+
                                         photoThumbnail.setImageDrawable(roundedBitmapDrawable);
                                         animateThumbnail();
                                         Log.d(TAG, bmp.getHeight() + " height and " + bmp.getWidth() + " width");
@@ -178,7 +229,7 @@ public class CameraActivity extends AppCompatActivity
 
                     }
 
-                }, null, null, 1, false);
+                }, null, filterConfig.isEmpty() ? null : filterConfig, filterConfig.isEmpty() ? 1 : filterIntensity, false);
             }
         }).start();
     }
@@ -342,16 +393,23 @@ public class CameraActivity extends AppCompatActivity
 
         modeSelector.addOnItemChangedListener(new onModeChangedListener());
 
-        filters.add(new FilterItem(0, "", 0, R.drawable.thumbnail_border));
-        filters.add(new FilterItem(1, getString(R.string.filter0), getResources().getInteger(R.integer.intensityFilter0), R.drawable.thumbnail_border));
-        filters.add(new FilterItem(2, "", 0, R.drawable.thumbnail_border));
+        filters.add(new FilterItem(0, R.string.nameFilter0, "", 0, R.drawable.thumbnail_border));
+        filters.add(new FilterItem(1, R.string.nameFilter1, getString(R.string.configFilter1), getResources().getInteger(R.integer.intensityFilter0), R.drawable.nashville));
 
         filtersAdapter = new FilterListAdapter(this, filters, filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener()
         {
             @Override
             public void onClickSelectedItemListener(int selected)
             {
-                takePicture();
+                //Here get config for selected filter
+                try
+                {
+                    takePicture();
+
+                } catch (Exception ex)
+                {
+                    ex.printStackTrace();
+                }
             }
         });
 
@@ -374,6 +432,7 @@ public class CameraActivity extends AppCompatActivity
                 filterSelector.smoothScrollToPosition(0);
             }
         });
+        filterSelector.addOnItemChangedListener(new onFilterChangedListener());
     }
 
     @Override
@@ -403,14 +462,14 @@ public class CameraActivity extends AppCompatActivity
     private void performSwipeRight()
     {
         int previous = filterSelector.getCurrentItem() - 1;
-        if(previous >= 0)
+        if (previous >= 0)
             filterSelector.smoothScrollToPosition(previous);
     }
 
     private void performSwipeLeft()
     {
         int next = filterSelector.getCurrentItem() + 1;
-        if(next < filtersAdapter.getItemCount())
+        if (next < filtersAdapter.getItemCount())
             filterSelector.smoothScrollToPosition(next);
         //surfaceView.setFilterWithConfig("@curve G(0, 35)(255, 255)B(0, 133)(255, 255) @adjust brightness 0.03 @adjust contrast 1.35 @curve G(0, 13)(255, 255)B(88, 0)(255, 255) @adjust brightness -0.04 @adjust contrast 0.8 @pixblend multiply 250 223 182 255 100");
     }
@@ -427,6 +486,7 @@ public class CameraActivity extends AppCompatActivity
 
     private void performFocus(MotionEvent event)
     {
+
         final float x = event.getX();
         final float y = event.getY();
         final float focusX = x / surfaceView.getWidth();
@@ -441,10 +501,12 @@ public class CameraActivity extends AppCompatActivity
             {
                 if (success)
                 {
+                    wasFocused = true;
                     Log.e(TAG, String.format("Focus OK, pos: %g, %g", focusX, focusY));
 
                 } else
                 {
+                    wasFocused = false;
                     Log.e(TAG, String.format("Focus failed, pos: %g, %g", focusX, focusY));
                 }
             }
@@ -453,21 +515,20 @@ public class CameraActivity extends AppCompatActivity
 
     private void animateThumbnail()
     {
-        photoThumbnailBorder.setVisibility(View.VISIBLE);
         photoThumbnail.animate().setListener(null).cancel();
-        photoThumbnail.setScaleX(2f);
-        photoThumbnail.setScaleY(2f);
-        photoThumbnail.setAlpha(0.3f);
-        photoThumbnail.animate().alpha(1f).scaleX(1).scaleY(1).setStartDelay(0).setDuration(330)
+        photoThumbnail.setScaleX(6f);
+        photoThumbnail.setScaleY(6f);
+        photoThumbnail.setAlpha(0f);
+        photoThumbnail.animate().setStartDelay(0).alpha(1f).scaleX(1f).scaleY(1f).setDuration(500)
                 .setListener(new AnimatorListenerAdapter()
                 {
                     @Override
                     public void onAnimationEnd(Animator animation)
                     {
                         super.onAnimationEnd(animation);
+                        //photoThumbnail.animate().setStartDelay(200).scaleX(1).scaleY(1).setDuration(50).start();
                     }
                 }).start();
-
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -481,6 +542,7 @@ public class CameraActivity extends AppCompatActivity
             @Override
             public void createOver(boolean success)
             {
+                surfaceView.setFocusMode(FOCUS_MODE_CONTINUOUS_PICTURE);
                 isFilteringEnabled = true;
                 canTakePicture = true;
             }
@@ -579,6 +641,46 @@ public class CameraActivity extends AppCompatActivity
                 selectedCameraModes.add(adapterPosition);
                 viewHolder.itemView.setSelected(true);
             }
+        }
+    }
+
+    private class onFilterChangedListener implements DiscreteScrollView.OnItemChangedListener<RecyclerView.ViewHolder>
+    {
+        @Override
+        public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder, int adapterPosition)
+        {
+            FilterItem filter = filters.get(adapterPosition);
+            filterIndicator.setText(getString(filter.getNameId()));
+
+            surfaceView.setFilterWithConfig(filter.getParams());
+            surfaceView.setFilterIntensity(filter.getIntensity());
+
+            filterConfig = filter.getParams();
+            filterIntensity = filter.getIntensity();
+
+            filterIndicator.setAlpha(0f);
+            filterIndicator.setScaleX(0f);
+            filterIndicator.setScaleY(0f);
+
+            filterIndicator.setVisibility(View.VISIBLE);
+            filterIndicator.animate().setListener(null).cancel();
+            filterIndicator.animate().setStartDelay(0).setDuration(350).alpha(1).scaleX(1).scaleY(1).setListener(new AnimatorListenerAdapter()
+            {
+                @Override
+                public void onAnimationEnd(Animator animation)
+                {
+                    super.onAnimationEnd(animation);
+                    filterIndicator.animate().setStartDelay(1500).alpha(0f).scaleX(0f).scaleY(0f).setDuration(200).setListener(new AnimatorListenerAdapter()
+                    {
+                        @Override
+                        public void onAnimationEnd(Animator animation)
+                        {
+                            super.onAnimationEnd(animation);
+                            filterIndicator.setVisibility(View.GONE);
+                        }
+                    }).start();
+                }
+            }).start();
         }
     }
 }
