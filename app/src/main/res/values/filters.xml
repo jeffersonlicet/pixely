@@ -1,20 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="nFilters">3</integer>
+    <integer name="nFilters">19</integer>
+
+
     <!-- Filter 0 -->
     <string name="nameFilter0">Default</string>
     <string name="configFilter0" translatable="false" />
     <string name="intensityFilter0" translatable="false">1</string>
-    <drawable name="thumbFilter0">@drawable/thumbnail_border</drawable>
+    <string name="thumbFilter0" translatable="false">thumbnail_border</string>
+
+
+    <!-- TYPE D -->
 
     <string name="nameFilter1" translatable="false">Beautify</string>
     <string name="configFilter1" translatable="false" >\@beautify face 1 480 640</string>
     <string name="intensityFilter1" translatable="false">1</string>
-    <drawable name="thumbFilter1">@drawable/beautify</drawable>
+    <string name="thumbFilter1" translatable="false">beautify</string>
 
     <string name="nameFilter2" translatable="false">Beautify 2</string>
     <string name="configFilter2" translatable="false" >\@beautify bilateral 100 3.5 2</string>
-    <string name="intensityFilter2" translatable="false">1</string>
-    <drawable name="thumbFilter2">@drawable/beautify2</drawable>
+    <string name="intensityFilter2" translatable="false">0.6</string>
+    <string name="thumbFilter2" translatable="false">beautify2</string>
+
+
+    <!-- TYPE A -->
+    <string name="nameFilter3" translatable="false">Aar</string>
+    <string name="configFilter3" translatable="false" >\@curve R(0, 0)(96, 61)(154, 177)(255, 255) \@pixblend overlay 0.357 0.863 0.882 1 40</string>
+    <string name="intensityFilter3" translatable="false">1</string>
+    <string name="thumbFilter3" translatable="false">aar</string>
+
+    <string name="nameFilter4" translatable="false">Ashley</string>
+    <string name="configFilter4" translatable="false" >\@curve R(0, 0)(43, 77)(56, 104)(100, 166)(255, 255)G(0, 0)(35, 53)(255, 255)B(0, 0)(110, 123)(255, 212)</string>
+    <string name="intensityFilter4" translatable="false">1</string>
+    <string name="thumbFilter4" translatable="false">ashley</string>
+
+    <string name="nameFilter5" translatable="false">Ava</string>
+    <string name="configFilter5" translatable="false" >\@curve R(48, 56)(82, 129)(130, 206)(214, 255)G(7, 37)(64, 111)(140, 190)(232, 220)B(2, 97)(114, 153)(229, 172)</string>
+    <string name="intensityFilter5" translatable="false">1</string>
+    <string name="thumbFilter5" translatable="false">ava</string>
+
+    <string name="nameFilter6" translatable="false">Bertha</string>
+    <string name="configFilter6" translatable="false" >\@curve R(18, 0)(67, 63)(104, 152)(128, 255)G(23, 4)(87, 106)(132, 251)B(17, 0)(67, 63)(108, 174)(128, 251)</string>
+    <string name="intensityFilter6" translatable="false">0.5</string>
+    <string name="thumbFilter6" translatable="false">bertha</string>
+
+    <string name="nameFilter7" translatable="false">Blue</string>
+    <string name="configFilter7" translatable="false" >\@curve R(0, 0)(71, 74)(164, 165)(255, 255) \@pixblend overlay 0.357 0.863 0.882 1 40</string>
+    <string name="intensityFilter7" translatable="false">1</string>
+    <string name="thumbFilter7" translatable="false">blue</string>
+
+    <string name="nameFilter8" translatable="false">Carmen</string>
+    <string name="configFilter8" translatable="false" >\@adjust saturation 0.7 \@pixblend screen 0.8112 0.243 1 1 40</string>
+    <string name="intensityFilter8" translatable="false">0.8</string>
+    <string name="thumbFilter8" translatable="false">carmen</string>
+
+    <string name="nameFilter9" translatable="false">Deepblue</string>
+    <string name="configFilter9" translatable="false" >\@curve B(0, 0)(70, 87)(140, 191)(255, 255) \@pixblend pinlight 0.247 0.49 0.894 1 20</string>
+    <string name="intensityFilter9" translatable="false">1</string>
+    <string name="thumbFilter9" translatable="false">deepblue</string>
+
+    <string name="nameFilter10" translatable="false">Haze</string>
+    <string name="configFilter10" translatable="false" >\@style haze 0.5 -0.14 1 0.8 1</string>
+    <string name="intensityFilter10" translatable="false">1</string>
+    <string name="thumbFilter10" translatable="false">haze</string>
+
+    <string name="nameFilter11" translatable="false">Jane</string>
+    <string name="configFilter11" translatable="false" >\@curve R(0, 0)(117, 95)(155, 171)(179, 225)(255, 255)G(0, 0)(94, 66)(155, 176)(255, 255)B(0, 0)(48, 59)(141, 130)(255, 224)</string>
+    <string name="intensityFilter11" translatable="false">1</string>
+    <string name="thumbFilter11" translatable="false">jane</string>
+
+    <string name="nameFilter12" translatable="false">Jhoana</string>
+    <string name="configFilter12" translatable="false" >\@curve R(0, 0)(69, 63)(105, 138)(151, 222)(255, 255)G(0, 0)(67, 51)(135, 191)(255, 255)B(0, 0)(86, 76)(150, 212)(255, 255)</string>
+    <string name="intensityFilter12" translatable="false">1</string>
+    <string name="thumbFilter12" translatable="false">jhoana</string>
+
+    <string name="nameFilter13" translatable="false">Pink</string>
+    <string name="configFilter13" translatable="false" >\@curve R(0, 0)(71, 74)(164, 165)(255, 255) \@pixblend screen 0.94118 0.29 0.29 1 20</string>
+    <string name="intensityFilter13" translatable="false">1</string>
+    <string name="thumbFilter13" translatable="false">pink</string>
+
+    <string name="nameFilter14" translatable="false">Pink2</string>
+    <string name="configFilter14" translatable="false" >\@curve R(0, 0)(152, 183)(255, 255)G(0, 0)(161, 133)(255, 255) \@pixblend overlay 0.357 0.863 0.882 1 40</string>
+    <string name="intensityFilter14" translatable="false">1</string>
+    <string name="thumbFilter14" translatable="false">pink2</string>
+
+    <string name="nameFilter15" translatable="false">Purple</string>
+    <string name="configFilter15" translatable="false" >\@curve B(0, 0)(68, 72)(149, 184)(255, 255) \@pixblend screen 0.94118 0.29 0.29 1 20</string>
+    <string name="intensityFilter15" translatable="false">1</string>
+    <string name="thumbFilter15" translatable="false">purple</string>
+
+    <string name="nameFilter16" translatable="false">Trissy</string>
+    <string name="configFilter16" translatable="false" >\@curve R(5, 49)(85, 173)(184, 249)G(23, 35)(65, 76)(129, 145)(255, 199)B(74, 69)(158, 107)(255, 126)</string>
+    <string name="intensityFilter16" translatable="false">0.8</string>
+    <string name="thumbFilter16" translatable="false">trissy</string>
+
+    <string name="nameFilter17" translatable="false">Vintage</string>
+    <string name="configFilter17" translatable="false" >\@adjust hsl 0.02 -0.31 -0.17 @curve R(0, 28)(23, 45)(117, 148)(135, 162)G(0, 8)(131, 152)(255, 255)B(0, 17)(58, 80)(132, 131)(127, 131)(255, 225)</string>
+    <string name="intensityFilter17" translatable="false">1</string>
+    <string name="thumbFilter17" translatable="false">vintage</string>
+
+    <string name="nameFilter18" translatable="false">Yellow</string>
+    <string name="configFilter18" translatable="false" >\@curve G(0, 0)(144, 166)(255, 255) \@pixblend screen 0.94118 0.29 0.29 1 20</string>
+    <string name="intensityFilter18" translatable="false">1</string>
+    <string name="thumbFilter18" translatable="false">yellow</string>
 
 </resources>

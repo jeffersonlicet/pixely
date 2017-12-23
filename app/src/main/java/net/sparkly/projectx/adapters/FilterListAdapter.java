@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,7 +58,7 @@ public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.Vi
                 if (recyclerView != null)
                 {
                     recyclerView.smoothScrollToPosition(holder.getAdapterPosition());
-                    if(selected == filters.get(holder.getAdapterPosition()).getId())
+                    if (selected == filters.get(holder.getAdapterPosition()).getId())
                         filterItemClickListener.onClickSelectedItemListener(selected);
 
                     else selected = filters.get(holder.getAdapterPosition()).getId();
@@ -67,14 +68,22 @@ public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.Vi
 
         try
         {
-            Bitmap original = BitmapFactory.decodeResource(context.getResources(), filters.get(holder.getAdapterPosition()).getThumbnail());
-            //Bitmap b = Bitmap.createScaledBitmap(original, 100, 100, false);
+            Bitmap original = null;
 
-            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(context.getResources(), original);
-            roundedBitmapDrawable.setCircular(true);
-            holder.filterItemThumbnail.setImageDrawable(roundedBitmapDrawable);
-        }
-        catch (Exception ex)
+            if (filters.get(holder.getAdapterPosition()).getId() == 0)
+            {
+                holder.filterItemThumbnail.setImageDrawable(context.getResources().getDrawable(R.drawable.camera_shutter_inside));
+
+            } else
+            {
+                original = BitmapFactory.decodeResource(context.getResources(), filters.get(holder.getAdapterPosition()).getThumbnail());
+                Bitmap b = Bitmap.createScaledBitmap(original, 100, 100, false);
+
+                RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(context.getResources(), b);
+                roundedBitmapDrawable.setCircular(true);
+                holder.filterItemThumbnail.setImageDrawable(roundedBitmapDrawable);
+            }
+        } catch (Exception ex)
         {
             ex.printStackTrace();
         }
@@ -100,7 +109,8 @@ public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.Vi
 
     }
 
-    public interface FilterItemClickListener {
+    public interface FilterItemClickListener
+    {
         void onClickSelectedItemListener(int selected);
     }
 }

@@ -30,6 +30,8 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.IntBuffer;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -769,7 +771,16 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
         List<Camera.Size> sizes = parameters.getSupportedPreviewSizes();
 
-        for (int i = 0; i < sizes.size(); i++)
+        Collections.sort(sizes, new Comparator<Camera.Size>()
+        {
+            @Override
+            public int compare(Camera.Size size1, Camera.Size size2)
+            {
+                return size1.height*size1.width - size2.height*size2.width;
+            }
+        });
+
+        /*for (int i = 0; i < sizes.size(); i++)
         {
             Camera.Size s = sizes.get(i);
 
@@ -779,8 +790,8 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
                 index = i;
                 max = size;
             }
-        }
+        }*/
 
-        return sizes.get(index);
+        return sizes.get((int) Math.ceil(sizes.size()/2));
     }
 }

@@ -81,7 +81,7 @@ public class CameraActivity extends AppCompatActivity
 
     private int actualFlash;
     private int actualCamera;
-    private int seekBarWait = 2000;
+    private int seekBarWait = 5000;
     private float filterIntensity = 1;
     private String filterConfig;
 
@@ -161,7 +161,15 @@ public class CameraActivity extends AppCompatActivity
         @Override
         public void run()
         {
-            intensityIndicator.animate().setStartDelay(0).alpha(0).setDuration(500).start();
+            intensityIndicator.animate().setStartDelay(0).alpha(0).setDuration(500).setListener(new AnimatorListenerAdapter()
+            {
+                @Override
+                public void onAnimationEnd(Animator animation)
+                {
+                    super.onAnimationEnd(animation);
+                    intensityIndicator.setVisibility(View.GONE);
+                }
+            }).start();
         }
     };
 
@@ -462,12 +470,13 @@ public class CameraActivity extends AppCompatActivity
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b)
             {
-                if(!isFilteringEnabled) return;
+                Log.d(TAG, " seek value " + i);
+                if (!isFilteringEnabled) return;
 
-                float value = i/100;
+                float value = i / 100f;
                 filterIntensity = value;
 
-                if(!filterConfig.isEmpty())
+                if (!filterConfig.isEmpty())
                 {
                     surfaceView.setFilterIntensity(value);
                 }
@@ -491,16 +500,25 @@ public class CameraActivity extends AppCompatActivity
 
     private void buildFilters()
     {
-        int nFilters = getResources().getInteger(R.integer.nFilters);
-
-        for (int i = 0; i < nFilters; i++)
+        try
         {
-            Log.d(TAG, "Creating filter");
-            String name = getString(getResources().getIdentifier("nameFilter" + i, "string", getPackageName()));
-            String params = getString(getResources().getIdentifier("configFilter" + i, "string", getPackageName()));
-            float intensity = Float.parseFloat(getString(getResources().getIdentifier("intensityFilter" + i, "string", getPackageName())));
-            int thumbId = getResources().getIdentifier("intensityFilter" + i, "drawable", getPackageName());
-            filters.add(new FilterItem(i, name, params, intensity, thumbId));
+            int nFilters = getResources().getInteger(R.integer.nFilters);
+            Log.d(TAG, "Shutter inside id: " + R.drawable.camera_shutter_inside);
+            filters.add(new FilterItem(0, getString(R.string.nameFilter0), "", 1, R.drawable.camera_shutter_inside));
+
+
+            for (int i = 1; i < nFilters; i++)
+            {
+                Log.d(TAG, "Creating filter");
+                String name = getString(getResources().getIdentifier("nameFilter" + i, "string", getPackageName()));
+                String params = getString(getResources().getIdentifier("configFilter" + i, "string", getPackageName()));
+                float intensity = Float.parseFloat(getString(getResources().getIdentifier("intensityFilter" + i, "string", getPackageName())));
+                String thumbName = getString(getResources().getIdentifier("thumbFilter" + i, "string", getPackageName()));
+                filters.add(new FilterItem(i, name, params, intensity, getResources().getIdentifier(thumbName, "drawable", getPackageName())));
+            }
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
         }
     }
 
@@ -555,8 +573,9 @@ public class CameraActivity extends AppCompatActivity
 
     private void performFocus(MotionEvent event)
     {
-        if(!filterConfig.isEmpty())
+        if (!filterConfig.isEmpty())
         {
+            intensityIndicator.setVisibility(View.VISIBLE);
             intensityIndicator.animate().alpha(1).setDuration(300).setListener(new AnimatorListenerAdapter()
             {
                 @Override
@@ -597,11 +616,6 @@ public class CameraActivity extends AppCompatActivity
         });
     }
 
-    private void startHideSeekBar()
-    {
-        hideSeekBarHandler.postDelayed(runHideSeek, seekBarWait);
-    }
-
     private void restartHideSeekBar()
     {
         hideSeekBarHandler.removeCallbacks(runHideSeek);
@@ -615,6 +629,7 @@ public class CameraActivity extends AppCompatActivity
         photoThumbnail.setScaleX(6f);
         photoThumbnail.setScaleY(6f);
         photoThumbnail.setAlpha(0f);
+        photoThumbnail.setVisibility(View.VISIBLE);
         photoThumbnail.animate().setStartDelay(0).alpha(1f).scaleX(1f).scaleY(1f).setDuration(500)
                 .setListener(new AnimatorListenerAdapter()
                 {
@@ -751,7 +766,8 @@ public class CameraActivity extends AppCompatActivity
             surfaceView.setFilterWithConfig(filter.getParams());
             surfaceView.setFilterIntensity(filter.getIntensity());
 
-            intensityIndicator.setProgress((int) (filter.getIntensity()*100));
+            intensityIndicator.setProgress((int) (filter.getIntensity() * 100f));
+            Log.d(TAG, " New intensity:" + (int) (filter.getIntensity() * 100f));
 
             filterConfig = filter.getParams();
             filterIntensity = filter.getIntensity();
