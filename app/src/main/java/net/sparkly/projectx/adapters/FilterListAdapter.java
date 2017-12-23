@@ -68,9 +68,9 @@ public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.Vi
         try
         {
             Bitmap original = BitmapFactory.decodeResource(context.getResources(), filters.get(holder.getAdapterPosition()).getThumbnail());
-            Bitmap b = Bitmap.createScaledBitmap(original, 100, 100, false);
+            //Bitmap b = Bitmap.createScaledBitmap(original, 100, 100, false);
 
-            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(context.getResources(), b);
+            RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(context.getResources(), original);
             roundedBitmapDrawable.setCircular(true);
             holder.filterItemThumbnail.setImageDrawable(roundedBitmapDrawable);
         }

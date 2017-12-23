@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <integer name="nFilters">3</integer>
     <!-- Filter 0 -->
-    <string name="configFilter0" translatable="false" />
     <string name="nameFilter0">Default</string>
-    <integer name="intensityFilter0" translatable="false">1</integer>
+    <string name="configFilter0" translatable="false" />
+    <string name="intensityFilter0" translatable="false">1</string>
+    <drawable name="thumbFilter0">@drawable/thumbnail_border</drawable>
 
-    <!-- Filter 1 -->
-    <string name="configFilter1" translatable="false">\@curve G(0, 35)(255, 255)B(0, 133)(255, 255) \@adjust brightness 0.03 \@adjust contrast 1.35 \@curve G(0, 13)(255, 255)B(88, 0)(255, 255) \@adjust brightness -0.04 \@adjust contrast 0.8 \@pixblend multiply 250 223 182 255 100</string>
-    <string name="nameFilter1" translatable="false">Nashville</string>
-    <integer name="intensityFilter1" translatable="false">1</integer>
+    <string name="nameFilter1" translatable="false">Beautify</string>
+    <string name="configFilter1" translatable="false" >\@beautify face 1 480 640</string>
+    <string name="intensityFilter1" translatable="false">1</string>
+    <drawable name="thumbFilter1">@drawable/beautify</drawable>
+
+    <string name="nameFilter2" translatable="false">Beautify 2</string>
+    <string name="configFilter2" translatable="false" >\@beautify bilateral 100 3.5 2</string>
+    <string name="intensityFilter2" translatable="false">1</string>
+    <drawable name="thumbFilter2">@drawable/beautify2</drawable>
+
 </resources>

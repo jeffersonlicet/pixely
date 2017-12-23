@@ -19,35 +19,39 @@
         android:layout_marginRight="40dp"
         android:layout_marginTop="15dp" />
 
+
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true">
 
         <ImageView
             android:id="@+id/photoThumbnailBorder"
             android:layout_width="42dp"
-            android:layout_alignParentBottom="true"
             android:layout_height="42dp"
-            android:layout_marginBottom="25dp"
+            android:layout_alignParentBottom="true"
             android:layout_centerInParent="true"
+            android:layout_marginBottom="25dp"
             android:clickable="true"
             android:focusable="true"
             android:scaleType="centerCrop"
-            android:visibility="gone"
             android:src="@drawable/camera_shutter_inside"
+            android:visibility="gone"
             tools:ignore="ContentDescription" />
 
         <ImageView
             android:id="@+id/photoThumbnail"
             android:layout_width="45dp"
-            android:layout_alignParentBottom="true"
             android:layout_height="45dp"
+            android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
             android:clickable="true"
             android:focusable="true"
-            android:layout_marginBottom="20dp"
-            android:src="@drawable/camera_shutter_inside"
             android:scaleType="centerCrop"
+            android:src="@drawable/camera_shutter_inside"
             tools:ignore="ContentDescription" />
 
     </RelativeLayout>
@@ -62,7 +66,6 @@
             android:id="@+id/filterIndicator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
             android:padding="12dp"
             android:text="Normal"
             android:textAlignment="center"
@@ -71,6 +74,19 @@
             android:textSize="40sp"
             android:textStyle="bold"
             android:visibility="gone" />
+
+        <android.support.v7.widget.AppCompatSeekBar
+            android:layout_width="220dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="12dp"
+            android:max="100"
+            android:id="@+id/intensityIndicator"
+            android:progress="0"
+            android:alpha="0"
+            android:clickable="true"
+            android:focusable="true"
+            />
 
         <RelativeLayout
             android:layout_width="match_parent"

@@ -4,18 +4,18 @@ package net.sparkly.projectx.models;
 public class FilterItem
 {
     private String params;
-    private int nameId;
+    private String name;
     private int thumbnail;
     private int id;
-    private int intensity;
+    private float intensity;
 
-    public FilterItem(int filterId, int nameId, String params, int intensity, int thumbnail)
+    public FilterItem(int filterId, String name, String params, float intensity, int thumbnail)
     {
         id = filterId;
         this.params = params;
         this.intensity = intensity;
         this.thumbnail  = thumbnail;
-        this.nameId = nameId;
+        this.name = name;
     }
 
     public int getId()
@@ -28,12 +28,12 @@ public class FilterItem
         this.id = id;
     }
 
-    public int getIntensity()
+    public float getIntensity()
     {
         return intensity;
     }
 
-    public void setIntensity(int intensity)
+    public void setIntensity(float intensity)
     {
         this.intensity = intensity;
     }
@@ -58,13 +58,13 @@ public class FilterItem
         this.params = params;
     }
 
-    public int getNameId()
+    public String getName()
     {
-        return nameId;
+        return name;
     }
 
-    public void setNameId(int nameId)
+    public void setName(String name)
     {
-        this.nameId = nameId;
+        this.name = name;
     }
 }

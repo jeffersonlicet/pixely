@@ -7,14 +7,17 @@ import android.app.Activity;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatSeekBar;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -26,6 +29,7 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.yarolegovich.discretescrollview.DiscreteScrollView;
@@ -77,7 +81,8 @@ public class CameraActivity extends AppCompatActivity
 
     private int actualFlash;
     private int actualCamera;
-    private float filterIntensity;
+    private int seekBarWait = 2000;
+    private float filterIntensity = 1;
     private String filterConfig;
 
     private boolean canTakePicture;
@@ -88,6 +93,7 @@ public class CameraActivity extends AppCompatActivity
 
     private ModeListAdapter adapter;
     private FilterListAdapter filtersAdapter;
+    Handler hideSeekBarHandler = new Handler();
 
     private List<SingleModeItem> modes = new ArrayList<>();
     private List<FilterItem> filters = new ArrayList<>();
@@ -98,7 +104,6 @@ public class CameraActivity extends AppCompatActivity
     private GestureDetectorCompat mDetector;
     private FocusMarkerLayout focusMarkerLayout;
     private StorageManager storageManager;
-
 
     @BindView(R.id.surfaceView)
     CameraView surfaceView;
@@ -130,6 +135,9 @@ public class CameraActivity extends AppCompatActivity
     @BindView(R.id.filterIndicator)
     TextView filterIndicator;
 
+    @BindView(R.id.intensityIndicator)
+    AppCompatSeekBar intensityIndicator;
+
     @OnClick({R.id.toggleFlash, R.id.toggleCamera, R.id.cameraShutter})
     public void clickManager(View view)
     {
@@ -147,6 +155,15 @@ public class CameraActivity extends AppCompatActivity
                 break;
         }
     }
+
+    Runnable runHideSeek = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            intensityIndicator.animate().setStartDelay(0).alpha(0).setDuration(500).start();
+        }
+    };
 
     private void takePicture()
     {
@@ -289,6 +306,13 @@ public class CameraActivity extends AppCompatActivity
             surfaceView.setCameraFacing(actualCamera);
             surfaceView.onPause();
             surfaceView.onResume();
+
+            if (filterConfig != null)
+            {
+                surfaceView.setFilterWithConfig(filterConfig);
+                surfaceView.setFilterIntensity(filterIntensity);
+            }
+
         } catch (Exception ex)
         {
             ex.printStackTrace();
@@ -393,15 +417,13 @@ public class CameraActivity extends AppCompatActivity
 
         modeSelector.addOnItemChangedListener(new onModeChangedListener());
 
-        filters.add(new FilterItem(0, R.string.nameFilter0, "", 0, R.drawable.thumbnail_border));
-        filters.add(new FilterItem(1, R.string.nameFilter1, getString(R.string.configFilter1), getResources().getInteger(R.integer.intensityFilter0), R.drawable.nashville));
+        buildFilters();
 
         filtersAdapter = new FilterListAdapter(this, filters, filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener()
         {
             @Override
             public void onClickSelectedItemListener(int selected)
             {
-                //Here get config for selected filter
                 try
                 {
                     takePicture();
@@ -433,6 +455,53 @@ public class CameraActivity extends AppCompatActivity
             }
         });
         filterSelector.addOnItemChangedListener(new onFilterChangedListener());
+
+
+        intensityIndicator.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
+        {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b)
+            {
+                if(!isFilteringEnabled) return;
+
+                float value = i/100;
+                filterIntensity = value;
+
+                if(!filterConfig.isEmpty())
+                {
+                    surfaceView.setFilterIntensity(value);
+                }
+
+                restartHideSeekBar();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar)
+            {
+                restartHideSeekBar();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar)
+            {
+                restartHideSeekBar();
+            }
+        });
+    }
+
+    private void buildFilters()
+    {
+        int nFilters = getResources().getInteger(R.integer.nFilters);
+
+        for (int i = 0; i < nFilters; i++)
+        {
+            Log.d(TAG, "Creating filter");
+            String name = getString(getResources().getIdentifier("nameFilter" + i, "string", getPackageName()));
+            String params = getString(getResources().getIdentifier("configFilter" + i, "string", getPackageName()));
+            float intensity = Float.parseFloat(getString(getResources().getIdentifier("intensityFilter" + i, "string", getPackageName())));
+            int thumbId = getResources().getIdentifier("intensityFilter" + i, "drawable", getPackageName());
+            filters.add(new FilterItem(i, name, params, intensity, thumbId));
+        }
     }
 
     @Override
@@ -486,6 +555,21 @@ public class CameraActivity extends AppCompatActivity
 
     private void performFocus(MotionEvent event)
     {
+        if(!filterConfig.isEmpty())
+        {
+            intensityIndicator.animate().alpha(1).setDuration(300).setListener(new AnimatorListenerAdapter()
+            {
+                @Override
+                public void onAnimationEnd(Animator animation)
+                {
+                    restartHideSeekBar();
+                    super.onAnimationEnd(animation);
+                }
+
+
+            }).start();
+
+        }
 
         final float x = event.getX();
         final float y = event.getY();
@@ -512,6 +596,18 @@ public class CameraActivity extends AppCompatActivity
             }
         });
     }
+
+    private void startHideSeekBar()
+    {
+        hideSeekBarHandler.postDelayed(runHideSeek, seekBarWait);
+    }
+
+    private void restartHideSeekBar()
+    {
+        hideSeekBarHandler.removeCallbacks(runHideSeek);
+        hideSeekBarHandler.postDelayed(runHideSeek, seekBarWait);
+    }
+
 
     private void animateThumbnail()
     {
@@ -650,10 +746,12 @@ public class CameraActivity extends AppCompatActivity
         public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder, int adapterPosition)
         {
             FilterItem filter = filters.get(adapterPosition);
-            filterIndicator.setText(getString(filter.getNameId()));
+            filterIndicator.setText(filter.getName());
 
             surfaceView.setFilterWithConfig(filter.getParams());
             surfaceView.setFilterIntensity(filter.getIntensity());
+
+            intensityIndicator.setProgress((int) (filter.getIntensity()*100));
 
             filterConfig = filter.getParams();
             filterIntensity = filter.getIntensity();
