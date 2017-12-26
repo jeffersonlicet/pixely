@@ -26,6 +26,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -84,6 +88,7 @@ public class CameraActivity extends AppCompatActivity
     private int seekBarWait = 5000;
     private float filterIntensity = 1;
     private String filterConfig;
+    private int selectedIndex;
 
     private boolean canTakePicture;
     private boolean isFilteringEnabled;
@@ -137,6 +142,9 @@ public class CameraActivity extends AppCompatActivity
 
     @BindView(R.id.intensityIndicator)
     AppCompatSeekBar intensityIndicator;
+
+    @BindView(R.id.camera_shutter_outside)
+    ImageView camera_shutter_outside;
 
     @OnClick({R.id.toggleFlash, R.id.toggleCamera, R.id.cameraShutter})
     public void clickManager(View view)
@@ -242,6 +250,12 @@ public class CameraActivity extends AppCompatActivity
                                         photoThumbnail.setImageDrawable(roundedBitmapDrawable);
                                         animateThumbnail();
                                         Log.d(TAG, bmp.getHeight() + " height and " + bmp.getWidth() + " width");
+
+                                        camera_shutter_outside.clearAnimation();
+                                        camera_shutter_outside.setImageDrawable(getResources().getDrawable(R.drawable.camera_shutter_outside));
+                                        camera_shutter_outside.setRotation(0);
+
+                                        //filterSelector.getViewHolder(selectedIndex).itemView.animate().setDuration(200).scaleY(1.0f).scaleX(1.0f).start();
                                     }
                                 });
 
@@ -434,8 +448,18 @@ public class CameraActivity extends AppCompatActivity
             {
                 try
                 {
-                    takePicture();
+                    if (!canTakePicture) return;
 
+                    takePicture();
+                    camera_shutter_outside.setImageDrawable(getResources().getDrawable(R.drawable.camera_shutter_outside_dashed));
+                    RotateAnimation rotate = new RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    rotate.setDuration(3000);
+                    rotate.setInterpolator(new LinearInterpolator());
+                    rotate.setRepeatCount(Animation.INFINITE);
+                    camera_shutter_outside.startAnimation(rotate);
+
+                    //filterSelector.getViewHolder(selected).itemView.animate().setDuration(300).scaleY(1.2f).scaleX(1.2f).start();
+                    selectedIndex = selected;
                 } catch (Exception ex)
                 {
                     ex.printStackTrace();

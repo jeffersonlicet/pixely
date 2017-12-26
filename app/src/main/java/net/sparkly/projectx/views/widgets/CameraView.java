@@ -637,7 +637,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
                         if (config != null)
                         {
-                            CGENativeLibrary.filterImage_MultipleEffectsWriteBack(bmp2, config, intensity);
+                            //CGENativeLibrary.filterImage_MultipleEffectsWriteBack(bmp2, config, intensity);
                         }
 
                         photoCallback.takePictureOK(bmp2);
