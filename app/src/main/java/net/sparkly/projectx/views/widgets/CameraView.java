@@ -69,6 +69,8 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     private float[] _transformMatrix = new float[16];
 
     protected OnCreateCallback mOnCreateCallback;
+    private int frontalPhotoQuality;
+    private int rearPhotoQuality;
 
     public CameraView(Context context, AttributeSet attrs)
     {
@@ -117,8 +119,49 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
             mRecordWidth = bestPreviewSize.height;
             mRecordHeight = bestPreviewSize.width;
 
-            Camera.Size bestPictureSize = getBestPictureSize(cameraInstance().getParams());
-            cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
+            Camera.Size bestPictureSize = null;
+
+            if(facing == Camera.CameraInfo.CAMERA_FACING_BACK)
+            {
+                Log.d(TAG, rearPhotoQuality + " Quality setted");
+
+                if(rearPhotoQuality == 1)
+                {
+                    bestPictureSize = getMiddlePictureSize(cameraInstance().getParams());
+                    cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
+                }
+
+                else if(rearPhotoQuality == 2)
+                {
+                    bestPictureSize = getBestPictureSize(cameraInstance().getParams());
+                    cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
+                }
+
+                else
+                {
+                    bestPictureSize = getLowPictureSize(cameraInstance().getParams());
+                    cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
+                }
+            } else {
+                if(frontalPhotoQuality == 1)
+                {
+                    bestPictureSize = getMiddlePictureSize(cameraInstance().getParams());
+                    cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
+                }
+
+                else if(frontalPhotoQuality == 2)
+                {
+                    bestPictureSize = getBestPictureSize(cameraInstance().getParams());
+                    cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
+                }
+
+                else
+                {
+                    bestPictureSize = getLowPictureSize(cameraInstance().getParams());
+                    cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
+                }
+            }
+
 
             Log.d(TAG, bestPictureSize.width + " best picture width");
             Log.d(TAG, bestPictureSize.height + " best picture  height");
@@ -286,46 +329,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
         //resumePreview();
     }
 
-    public synchronized void resumePreview()
-    {
 
-        if (mFrameRecorder == null)
-        {
-            Log.e(TAG, "resumePreview after release!!");
-            return;
-        }
-
-        if (!cameraInstance().isCameraOpened())
-        {
-            int facing = mIsCameraBackForward ? Camera.CameraInfo.CAMERA_FACING_BACK :
-                    Camera.CameraInfo.CAMERA_FACING_FRONT;
-
-            if (!cameraInstance().tryOpenCamera(null, facing))
-            {
-                Log.e(TAG, "Error opening camera");
-                //TODO ABORT ALL
-            }
-
-            Camera.Size bestPreviewSize = getBestPreviewSize(cameraInstance().getParams());
-
-            Log.d(TAG, bestPreviewSize.width + " best preview width");
-            Log.d(TAG, bestPreviewSize.height + " best preview  height");
-
-            cameraInstance().setPreferPreviewSize(bestPreviewSize.height, bestPreviewSize.width);
-
-            mRecordWidth = bestPreviewSize.height;
-            mRecordHeight = bestPreviewSize.width;
-
-            Camera.Size bestPictureSize = getBestPictureSize(cameraInstance().getParams());
-            cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
-
-            Log.d(TAG, bestPictureSize.width + " best picture width");
-            Log.d(TAG, bestPictureSize.height + " best picture  height");
-        }
-
-
-        requestRender();
-    }
 
     public void focusAtPoint(float x, float y, Camera.AutoFocusCallback focusCallback)
     {
@@ -362,6 +366,16 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     public void setStorageManager(StorageManager storageManager)
     {
         this.storageManager = storageManager;
+    }
+
+    public void setFrontalPhotoQuality(int frontalPhotoQuality)
+    {
+        this.frontalPhotoQuality = frontalPhotoQuality;
+    }
+
+    public void setRearPhotoQuality(int rearPhotoQuality)
+    {
+        this.rearPhotoQuality = rearPhotoQuality;
     }
 
     public interface ReleaseOKCallback
@@ -508,7 +522,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
                     {
                         Camera.Parameters params = camera.getParameters();
                         Camera.Size sz = params.getPictureSize();
-                        Log.e(TAG, "Width taken: " + sz.width + " height taken:" + sz.height);
+                        Log.i(TAG, "Width taken: " + sz.width + " height taken:" + sz.height);
 
                         boolean shouldRotate;
 
@@ -637,7 +651,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
                         if (config != null)
                         {
-                            //CGENativeLibrary.filterImage_MultipleEffectsWriteBack(bmp2, config, intensity);
+                            CGENativeLibrary.filterImage_MultipleEffectsWriteBack(bmp2, config, intensity);
                         }
 
                         photoCallback.takePictureOK(bmp2);
@@ -673,15 +687,15 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
                 if (noMask || !mIsUsingMask)
                 {
 
-                    bufferTexID = Common.genBlankTextureID(mRecordWidth, mRecordHeight);
+                    bufferTexID = Common.genBlankTextureID(mRecordWidth/2, mRecordHeight/2);
                     frameBufferObject.bindTexture(bufferTexID);
-                    GLES20.glViewport(0, 0, mRecordWidth, mRecordHeight);
+                    GLES20.glViewport(0, 0, mRecordWidth/2, mRecordHeight/2);
                     mFrameRecorder.drawCache();
-                    buffer = IntBuffer.allocate(mRecordWidth * mRecordHeight);
-                    GLES20.glReadPixels(0, 0, mRecordWidth, mRecordHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer);
-                    bmp = Bitmap.createBitmap(mRecordWidth, mRecordHeight, Bitmap.Config.ARGB_8888);
+                    buffer = IntBuffer.allocate(mRecordWidth * mRecordHeight/4);
+                    GLES20.glReadPixels(0, 0, mRecordWidth/2, mRecordHeight/2, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer);
+                    bmp = Bitmap.createBitmap(mRecordWidth/2, mRecordHeight/2, Bitmap.Config.ARGB_8888);
                     bmp.copyPixelsFromBuffer(buffer);
-                    Log.i(TAG, String.format("w: %d, h: %d", mRecordWidth, mRecordHeight));
+                    Log.i(TAG, String.format("w: %d, h: %d", mRecordWidth/2, mRecordHeight/2));
 
                 } else
                 {
@@ -741,7 +755,21 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
         mDrawViewport.y = (mViewHeight - mDrawViewport.height) / 2;
 
     }
+    private Camera.Size getMiddlePictureSize(Camera.Parameters parameters)
+    {
+        List<Camera.Size> sizes = parameters.getSupportedPictureSizes();
 
+        Collections.sort(sizes, new Comparator<Camera.Size>()
+        {
+            @Override
+            public int compare(Camera.Size size1, Camera.Size size2)
+            {
+                return size1.height*size1.width - size2.height*size2.width;
+            }
+        });
+
+        return sizes.get((int) Math.ceil(sizes.size()/2));
+    }
     private Camera.Size getBestPictureSize(Camera.Parameters parameters)
     {
         int max = 0;
@@ -762,6 +790,22 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
         }
 
         return sizes.get(index);
+    }
+
+    private Camera.Size getLowPictureSize(Camera.Parameters parameters)
+    {
+        List<Camera.Size> sizes = parameters.getSupportedPictureSizes();
+
+        Collections.sort(sizes, new Comparator<Camera.Size>()
+        {
+            @Override
+            public int compare(Camera.Size size1, Camera.Size size2)
+            {
+                return size1.height*size1.width - size2.height*size2.width;
+            }
+        });
+
+        return sizes.get((int) Math.ceil(sizes.size()/4));
     }
 
     private Camera.Size getBestPreviewSize(Camera.Parameters parameters)
@@ -792,6 +836,6 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
             }
         }*/
 
-        return sizes.get((int) Math.ceil(sizes.size()/2));
+        return sizes.get((int) Math.floor(sizes.size()/2));
     }
 }

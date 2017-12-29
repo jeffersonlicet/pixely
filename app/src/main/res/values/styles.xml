@@ -10,4 +10,8 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="Progressbar.White" parent="@style/Base.Widget.AppCompat.ProgressBar">
+        <item name="colorControlActivated">#FFF</item>
+    </style>
+
 </resources>

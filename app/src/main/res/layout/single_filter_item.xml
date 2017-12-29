@@ -12,5 +12,7 @@
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:id="@+id/filterItemThumbnail"
+        android:padding="3dp"
+        android:background="@drawable/camera_shutter_inside"
         tools:ignore="ContentDescription" />
 </RelativeLayout>

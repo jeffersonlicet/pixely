@@ -11,14 +11,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+
+
     <com.yarolegovich.discretescrollview.DiscreteScrollView
         android:id="@+id/modeSelector"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="40dp"
-        android:layout_marginRight="40dp"
-        android:layout_marginTop="15dp" />
-
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginTop="20dp" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -49,13 +50,31 @@
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="20dp"
             android:clickable="true"
-            android:visibility="gone"
             android:focusable="true"
             android:scaleType="centerCrop"
-            android:src="@drawable/camera_shutter_inside"
+            android:background="@drawable/camera_shutter_inside"
+            android:visibility="gone"
+            android:padding="3dp"
             tools:ignore="ContentDescription" />
 
+
+
     </RelativeLayout>
+
+    <android.support.v7.widget.AppCompatSeekBar
+        android:id="@+id/intensityIndicator"
+        android:layout_width="220dp"
+        android:background="@drawable/seekbar_background"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:padding="12dp"
+        android:alpha="0"
+        android:layout_centerInParent="true"
+        android:clickable="true"
+        android:focusable="true"
+        android:max="100"
+        android:visibility="gone"
+        android:progress="0" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -76,18 +95,7 @@
             android:textStyle="bold"
             android:visibility="gone" />
 
-        <android.support.v7.widget.AppCompatSeekBar
-            android:layout_width="220dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="12dp"
-            android:max="100"
-            android:id="@+id/intensityIndicator"
-            android:progress="0"
-            android:alpha="0"
-            android:clickable="true"
-            android:focusable="true"
-            />
+
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -102,9 +110,9 @@
                 android:focusable="true">
 
                 <ImageView
+                    android:id="@+id/camera_shutter_outside"
                     android:layout_width="70dp"
                     android:layout_height="70dp"
-                    android:id="@+id/camera_shutter_outside"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentStart="true"
                     android:layout_alignParentTop="true"
@@ -156,10 +164,19 @@
 
             <RelativeLayout
                 android:layout_width="0dp"
-                android:layout_height="44dp"
+                android:layout_height="40dp"
                 android:layout_margin="20dp"
                 android:layout_weight="1">
 
+                <ImageButton
+                    android:id="@+id/goSettings"
+                    android:layout_centerInParent="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_settings_white_24dp"
+                    android:visibility="gone"
+                    tools:ignore="ContentDescription" />
             </RelativeLayout>
 
             <RelativeLayout
@@ -183,6 +200,19 @@
 
         </LinearLayout>
     </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/photoFeedWrapper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:visibility="gone">
+
+        <com.yarolegovich.discretescrollview.DiscreteScrollView
+            android:id="@+id/photoFeed"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </RelativeLayout>
 
 
 </RelativeLayout>

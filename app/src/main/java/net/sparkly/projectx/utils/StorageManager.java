@@ -6,6 +6,8 @@ import android.os.Environment;
 
 import com.snatik.storage.Storage;
 
+import net.sparkly.projectx.R;
+
 import java.io.File;
 import java.util.List;
 
@@ -15,14 +17,25 @@ public class StorageManager {
     private Storage storage;
     private String storagePath;
 
-    public StorageManager(Context context) {
+    public StorageManager(Context context, boolean isPublicStorage) {
         storage = new Storage(context);
 
         if (Storage.isExternalWritable()) {
-            storagePath = storage.getExternalStorageDirectory(Environment.DIRECTORY_PICTURES) + File.separator + context.getString(org.wysaid.library.R.string.app_name);
+            if(isPublicStorage)
+                storagePath = storage.getExternalStorageDirectory(Environment.DIRECTORY_PICTURES) + File.separator + context.getString(R.string.app_name);
+            else storagePath = storage.getExternalStorageDirectory() + File.separator + "." + context.getString(R.string.app_name);
+
         } else {
-            storagePath = storage.getInternalFilesDirectory();
+            if(isPublicStorage)
+                storagePath = storage.getInternalFilesDirectory() + File.separator + context.getString(R.string.app_name);
+            else storagePath = storage.getInternalFilesDirectory() + File.separator + "." + context.getString(R.string.app_name);
         }
+
+        if(!folderExists(storagePath))
+            createFolder(storagePath);
+
+        if(!fileExist(".nomedia") && !isPublicStorage)
+            createFile(".nomedia", "");
     }
 
     public boolean createFolder(String name)

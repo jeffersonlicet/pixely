@@ -57,11 +57,14 @@ public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.Vi
             {
                 if (recyclerView != null)
                 {
-                    recyclerView.smoothScrollToPosition(holder.getAdapterPosition());
-                    if (selected == filters.get(holder.getAdapterPosition()).getId())
+                    if (selected == holder.getAdapterPosition())
                         filterItemClickListener.onClickSelectedItemListener(selected);
 
-                    else selected = filters.get(holder.getAdapterPosition()).getId();
+                    else
+                    {
+                        selected = holder.getAdapterPosition();
+                        recyclerView.smoothScrollToPosition(selected);
+                    }
                 }
             }
         });
@@ -95,12 +98,17 @@ public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.Vi
         return filters == null ? 0 : filters.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder
+    public void notifyChangedItem(int adapterPosition)
+    {
+        selected = adapterPosition;
+    }
+
+    class ViewHolder extends RecyclerView.ViewHolder
     {
         RelativeLayout filterWrapper;
         ImageView filterItemThumbnail;
 
-        public ViewHolder(View itemView)
+        ViewHolder(View itemView)
         {
             super(itemView);
             filterWrapper = itemView.findViewById(R.id.filterItemWrapper);

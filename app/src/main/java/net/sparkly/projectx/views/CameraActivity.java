@@ -4,19 +4,15 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.support.v4.view.GestureDetectorCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatSeekBar;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -26,7 +22,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
@@ -36,16 +31,19 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.request.RequestOptions;
 import com.yarolegovich.discretescrollview.DiscreteScrollView;
 import com.yarolegovich.discretescrollview.Orientation;
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer;
 
+import net.sparkly.projectx.GlideApp;
 import net.sparkly.projectx.R;
 import net.sparkly.projectx.adapters.FilterListAdapter;
 import net.sparkly.projectx.adapters.ModeListAdapter;
+import net.sparkly.projectx.adapters.PhotoFeedAdapter;
 import net.sparkly.projectx.models.FilterItem;
+import net.sparkly.projectx.models.PhotoItem;
 import net.sparkly.projectx.models.SingleModeItem;
-import net.sparkly.projectx.utils.BitmapUtils;
 import net.sparkly.projectx.utils.StorageManager;
 import net.sparkly.projectx.views.widgets.CameraSurfaceView;
 import net.sparkly.projectx.views.widgets.CameraView;
@@ -54,13 +52,9 @@ import net.sparkly.projectx.views.widgets.FocusMarkerLayout;
 import org.wysaid.camera.CameraInstance;
 import org.wysaid.nativePort.CGENativeLibrary;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -73,7 +67,7 @@ import butterknife.OnClick;
 import static android.hardware.Camera.Parameters.FOCUS_MODE_AUTO;
 import static android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE;
 
-public class CameraActivity extends AppCompatActivity
+public class CameraActivity extends AppActivity
 {
     private static final String TAG = CameraActivity.class.getSimpleName();
 
@@ -86,8 +80,10 @@ public class CameraActivity extends AppCompatActivity
     private int actualFlash;
     private int actualCamera;
     private int seekBarWait = 5000;
+    private int frontalPhotoQuality;
+    private int rearPhotoQuality;
     private float filterIntensity = 1;
-    private String filterConfig;
+    private String filterConfig = "";
     private int selectedIndex;
 
     private boolean canTakePicture;
@@ -95,20 +91,24 @@ public class CameraActivity extends AppCompatActivity
     private boolean pendingToggleFlash;
     private boolean pendingToggleCamera;
     private boolean wasFocused;
+    private boolean isPhotoFeedOpened;
 
     private ModeListAdapter adapter;
     private FilterListAdapter filtersAdapter;
+    private PhotoFeedAdapter photoFeedAdapter;
     Handler hideSeekBarHandler = new Handler();
 
     private List<SingleModeItem> modes = new ArrayList<>();
     private List<FilterItem> filters = new ArrayList<>();
     private List<Integer> selectedCameraModes = new ArrayList<>();
+    private List<PhotoItem> previewPhotos = new ArrayList<>();
     private List<Integer> selectedFilter;
 
     private Activity mActivity;
     private GestureDetectorCompat mDetector;
     private FocusMarkerLayout focusMarkerLayout;
     private StorageManager storageManager;
+    private StorageManager privateStorageManager;
 
     @BindView(R.id.surfaceView)
     CameraView surfaceView;
@@ -122,11 +122,17 @@ public class CameraActivity extends AppCompatActivity
     @BindView(R.id.filterSelector)
     DiscreteScrollView filterSelector;
 
+    @BindView(R.id.photoFeed)
+    DiscreteScrollView photoFeed;
+
     @BindView(R.id.toggleFlash)
     ImageButton toggleFlashIcon;
 
     @BindView(R.id.toggleCamera)
     ImageButton toggleCameraIcon;
+
+    @BindView(R.id.goSettings)
+    ImageButton goSettings;
 
     @BindView(R.id.cameraShutter)
     RelativeLayout cameraShutter;
@@ -146,7 +152,10 @@ public class CameraActivity extends AppCompatActivity
     @BindView(R.id.camera_shutter_outside)
     ImageView camera_shutter_outside;
 
-    @OnClick({R.id.toggleFlash, R.id.toggleCamera, R.id.cameraShutter})
+    @BindView(R.id.photoFeedWrapper)
+    RelativeLayout photoFeedWrapper;
+
+    @OnClick({R.id.toggleFlash, R.id.toggleCamera, R.id.photoThumbnail, R.id.goSettings})
     public void clickManager(View view)
     {
         switch (view.getId())
@@ -158,13 +167,203 @@ public class CameraActivity extends AppCompatActivity
                 toggleCamera();
                 break;
 
-            case R.id.cameraShutter:
-                //takePicture();
+            case R.id.photoThumbnail:
+                openPhotoFeed();
+                break;
+
+            case R.id.goSettings:
+                startActivity(new Intent(this, SettingsActivity.class));
+                finish();
                 break;
         }
     }
 
-    Runnable runHideSeek = new Runnable()
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        try
+        {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            requestWindowFeature(Window.FEATURE_NO_TITLE);
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+
+        setContentView(R.layout.activity_camera);
+        ButterKnife.bind(this);
+        focusMarkerLayout = new FocusMarkerLayout(this);
+        focusMarkerLayout.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+
+        relativeWrapper.addView(focusMarkerLayout);
+        relativeWrapper.setClickable(false);
+
+        mActivity = this;
+
+        try
+        {
+            storageManager = new StorageManager(this, true);
+            privateStorageManager = new StorageManager(this, false);
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+
+        try
+        {
+            mDetector = new GestureDetectorCompat(this, new CameraGestureListener());
+            CGENativeLibrary.setLoadImageCallback(mLoadImageCallback, null);
+            buildCamera();
+
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+
+        modes.add(new SingleModeItem(0, "GALLERY"));
+        modes.add(new SingleModeItem(1, "Portrait"));
+        modes.add(new SingleModeItem(2, "Video"));
+
+        adapter = new ModeListAdapter(this, modes, modeSelector, selectedCameraModes);
+        modeSelector.setOrientation(Orientation.HORIZONTAL);
+        modeSelector.setAdapter(adapter);
+        modeSelector.setItemTransitionTimeMillis(30);
+        modeSelector.setItemTransformer(new ScaleTransformer.Builder()
+                .setMinScale(0.7f)
+                .setMaxScale(0.8f)
+                .build());
+
+        modeSelector.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                modeSelector.smoothScrollToPosition(1);
+            }
+        });
+
+        modeSelector.addOnItemChangedListener(new onModeChangedListener());
+
+        buildFilters();
+
+        filtersAdapter = new FilterListAdapter(this, filters, filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener()
+        {
+            @Override
+            public void onClickSelectedItemListener(int selected)
+            {
+                try
+
+                {
+                    if (!canTakePicture) return;
+
+                    takePicture();
+
+                    camera_shutter_outside.setImageDrawable(getResources().getDrawable(R.drawable.camera_shutter_outside_dashed));
+                    RotateAnimation rotate = new RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+                    rotate.setDuration(3000);
+                    rotate.setInterpolator(new LinearInterpolator());
+                    rotate.setRepeatCount(Animation.INFINITE);
+                    camera_shutter_outside.startAnimation(rotate);
+
+                } catch (Exception ex)
+                {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        filterSelector.setOrientation(Orientation.HORIZONTAL);
+        filterSelector.setAdapter(filtersAdapter);
+        filterSelector.setSlideOnFling(true);
+        filterSelector.setSlideOnFlingThreshold(1000);
+        filterSelector.setItemTransitionTimeMillis(80);
+
+        filterSelector.setItemTransformer(new ScaleTransformer.Builder()
+                .setMaxScale(1.00f)
+                .setMinScale(0.8f)
+                .build());
+
+        filterSelector.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                filterSelector.smoothScrollToPosition(0);
+            }
+        });
+        filterSelector.addOnItemChangedListener(new onFilterChangedListener());
+
+
+        intensityIndicator.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
+        {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b)
+            {
+                if (!isFilteringEnabled) return;
+
+                float value = i / 100f;
+                filterIntensity = value;
+
+                if (!filterConfig.isEmpty())
+                {
+                    surfaceView.setFilterIntensity(value);
+                }
+
+                restartHideSeekBar();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar)
+            {
+                restartHideSeekBar();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar)
+            {
+                restartHideSeekBar();
+            }
+        });
+
+        photoFeedAdapter = new PhotoFeedAdapter(this, previewPhotos, privateStorageManager, storageManager);
+        photoFeed.setOrientation(Orientation.HORIZONTAL);
+        photoFeed.setAdapter(photoFeedAdapter);
+        photoFeed.setItemTransitionTimeMillis(30);
+        photoFeed.setItemTransformer(new ScaleTransformer.Builder()
+                .setMinScale(1f)
+                .setMaxScale(1f)
+                .build());
+
+    }
+
+    private void openPhotoFeed()
+    {
+        if (isPhotoFeedOpened) return;
+
+        try
+        {
+            photoFeed.post(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    photoFeed.smoothScrollToPosition(0);
+                    photoFeedWrapper.setVisibility(View.VISIBLE);
+                }
+            });
+            isPhotoFeedOpened = true;
+        } catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+    }
+
+    private Runnable runHideSeek = new Runnable()
     {
         @Override
         public void run()
@@ -176,6 +375,7 @@ public class CameraActivity extends AppCompatActivity
                 {
                     super.onAnimationEnd(animation);
                     intensityIndicator.setVisibility(View.GONE);
+                    goSettings.setVisibility(View.GONE);
                 }
             }).start();
         }
@@ -221,54 +421,109 @@ public class CameraActivity extends AppCompatActivity
 
     private void internalTakePicture()
     {
+
+        final PhotoItem currentPhoto = new PhotoItem();
+
         new Thread(new Runnable()
         {
             @Override
             public void run()
             {
+
+                final long startTime2 = System.currentTimeMillis();
+
+                //Take real picture with high resolution
                 surfaceView.takePicture(new CameraSurfaceView.TakePictureCallback()
                 {
                     @Override
                     public void takePictureOK(Bitmap bmp)
                     {
-                        surfaceView.takeShot(new CameraSurfaceView.TakePictureCallback()
+                        @SuppressLint("SimpleDateFormat") String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                        final String name = File.separator + "IMG_" + timeStamp + ".jpg";
+                        storageManager.createFile(name, bmp);
+                        bmp.recycle();
+
+                        mActivity.runOnUiThread(new Runnable()
                         {
                             @Override
-                            public void takePictureOK(final Bitmap bmp)
+                            public void run()
                             {
-                                mActivity.runOnUiThread(new Runnable()
-                                {
-                                    @Override
-                                    public void run()
-                                    {
-                                        Bitmap b = Bitmap.createScaledBitmap(bmp, 120, 120, false);
-                                        RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(getResources(), b);
-                                        roundedBitmapDrawable.setCircular(true);
-                                        bmp.recycle();
-                                        b.recycle();
-
-                                        photoThumbnail.setImageDrawable(roundedBitmapDrawable);
-                                        animateThumbnail();
-                                        Log.d(TAG, bmp.getHeight() + " height and " + bmp.getWidth() + " width");
-
-                                        camera_shutter_outside.clearAnimation();
-                                        camera_shutter_outside.setImageDrawable(getResources().getDrawable(R.drawable.camera_shutter_outside));
-                                        camera_shutter_outside.setRotation(0);
-
-                                        //filterSelector.getViewHolder(selectedIndex).itemView.animate().setDuration(200).scaleY(1.0f).scaleX(1.0f).start();
-                                    }
-                                });
+                                //previewPhotos.add(0, new PhotoItem(storageManager.getFile(name).getAbsolutePath()));
+                                //photoFeedAdapter.notifyItemInserted(0);
+                                int positionOfScroll = photoFeed.getCurrentItem();
+                                int position = previewPhotos.indexOf(currentPhoto);
+                                currentPhoto.setBigPath(storageManager.getFile(name).getAbsolutePath());
+                                setString("lastPhotoOriginal", name);
+                                //previewPhotos.remove(position);
+                                //previewPhotos.add(0, currentPhoto);
+                                photoFeedAdapter.notifyDataSetChanged();
+                                photoFeed.scrollToPosition(positionOfScroll);
+                                Log.d(TAG, "Done with big");
+                                Log.d(TAG, (System.currentTimeMillis() - startTime2) + "ms taking and saving big");
 
                             }
-                        }, true);
-
-                        @SuppressLint("SimpleDateFormat") String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                        String name = File.separator + "IMG_" + timeStamp + ".jpg";
-                        storageManager.createFile(name, bmp);
+                        });
 
                     }
 
-                }, null, filterConfig.isEmpty() ? null : filterConfig, filterConfig.isEmpty() ? 1 : filterIntensity, false);
+                }, null, filterConfig.isEmpty() ? null : filterConfig, filterConfig.isEmpty() ? 1 : filterIntensity, actualCamera == FRONTAL_CAMERA);
+            }
+        }).start();
+
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                final long startTime = System.currentTimeMillis();
+                // Take shot from screen
+                surfaceView.takeShot(new CameraSurfaceView.TakePictureCallback()
+                {
+                    @Override
+                    public void takePictureOK(Bitmap bmp)
+                    {
+                        @SuppressLint("SimpleDateFormat") String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                        final String name = File.separator + "IMG_" + timeStamp + ".jpg";
+                        privateStorageManager.createFile(name, bmp);
+                        bmp.recycle();
+
+                        mActivity.runOnUiThread(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                try
+                                {
+                                    Log.d(TAG, " Done with thumbnail");
+
+                                    GlideApp
+                                            .with(getApplicationContext())
+                                            .load(privateStorageManager.getFile(name))
+                                            .apply(RequestOptions.circleCropTransform())
+                                            .into(photoThumbnail);
+
+                                    animateThumbnail();
+                                    setString("lastPhotoThumbnail", name);
+                                    currentPhoto.setThumbPath(privateStorageManager.getFile(name).getAbsolutePath());
+                                    previewPhotos.add(0, currentPhoto);
+                                    photoFeedAdapter.notifyItemInserted(0);
+
+                                    camera_shutter_outside.clearAnimation();
+                                    camera_shutter_outside.setImageDrawable(getResources().getDrawable(R.drawable.camera_shutter_outside));
+                                    camera_shutter_outside.setRotation(0);
+
+                                    photoFeed.setAdapter(photoFeedAdapter);
+
+                                    Log.d(TAG, (System.currentTimeMillis() - startTime) + "ms taking and saving snap");
+                                } catch (Exception ex)
+                                {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        });
+                    }
+                }, true);
+
             }
         }).start();
     }
@@ -281,6 +536,8 @@ public class CameraActivity extends AppCompatActivity
         pendingToggleFlash = true;
         int flashBackup = actualFlash;
         int drawable = 0;
+
+        setBoolean("flashChanged", true);
 
         switch (actualFlash)
         {
@@ -298,6 +555,8 @@ public class CameraActivity extends AppCompatActivity
                 drawable = R.drawable.ic_flash_off_white_24dp;
                 break;
         }
+
+        setInteger("flashMode", actualFlash);
 
         boolean response = surfaceView.setFlashLightMode(actualFlash);
 
@@ -322,6 +581,9 @@ public class CameraActivity extends AppCompatActivity
         {
             actualCamera = actualCamera == BACK_CAMERA ? FRONTAL_CAMERA : BACK_CAMERA;
 
+            setBoolean("cameraChanged", true);
+            setInteger("cameraFacing", actualCamera);
+
             toggleCameraIcon.setImageDrawable(getResources().getDrawable(actualCamera == BACK_CAMERA ? R.drawable.ic_camera_front_white_24dp : R.drawable.ic_camera_rear_white_24dp));
             toggleFlashIcon.setVisibility(actualCamera == BACK_CAMERA ? View.VISIBLE : View.GONE);
 
@@ -343,11 +605,13 @@ public class CameraActivity extends AppCompatActivity
         pendingToggleCamera = false;
     }
 
-    public CGENativeLibrary.LoadImageCallback mLoadImageCallback = new CGENativeLibrary.LoadImageCallback()
+    private CGENativeLibrary.LoadImageCallback mLoadImageCallback = new CGENativeLibrary.LoadImageCallback()
     {
         @Override
         public Bitmap loadImage(String name, Object arg)
         {
+            Log.i(TAG, "Loading file: " + name);
+
             AssetManager am = getAssets();
             InputStream is;
             try
@@ -355,6 +619,8 @@ public class CameraActivity extends AppCompatActivity
                 is = am.open(name);
             } catch (IOException e)
             {
+                Log.e(TAG, "Can not open file " + name);
+                e.printStackTrace();
                 return null;
             }
 
@@ -367,160 +633,6 @@ public class CameraActivity extends AppCompatActivity
             bmp.recycle();
         }
     };
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        try
-        {
-            Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            requestWindowFeature(Window.FEATURE_NO_TITLE);
-        } catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
-
-        setContentView(R.layout.activity_camera);
-        ButterKnife.bind(this);
-
-        focusMarkerLayout = new FocusMarkerLayout(this);
-        focusMarkerLayout.setLayoutParams(new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
-
-        relativeWrapper.addView(focusMarkerLayout);
-        relativeWrapper.setClickable(false);
-
-        mActivity = this;
-
-        try
-        {
-            storageManager = new StorageManager(this);
-        } catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
-
-        try
-        {
-            mDetector = new GestureDetectorCompat(this, new CameraGestureListener());
-            CGENativeLibrary.setLoadImageCallback(mLoadImageCallback, null);
-            buildCamera();
-
-        } catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
-
-        modes.add(new SingleModeItem(0, "Gif"));
-        modes.add(new SingleModeItem(1, "Portrait"));
-        modes.add(new SingleModeItem(2, "Video"));
-
-        adapter = new ModeListAdapter(this, modes, modeSelector, selectedCameraModes);
-        modeSelector.setOrientation(Orientation.HORIZONTAL);
-        modeSelector.setAdapter(adapter);
-        modeSelector.setItemTransitionTimeMillis(30);
-        modeSelector.setItemTransformer(new ScaleTransformer.Builder()
-                .setMinScale(0.7f)
-                .setMaxScale(0.8f)
-                .build());
-
-        modeSelector.post(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                modeSelector.smoothScrollToPosition(1);
-            }
-        });
-
-        modeSelector.addOnItemChangedListener(new onModeChangedListener());
-
-        buildFilters();
-
-        filtersAdapter = new FilterListAdapter(this, filters, filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener()
-        {
-            @Override
-            public void onClickSelectedItemListener(int selected)
-            {
-                try
-                {
-                    if (!canTakePicture) return;
-
-                    takePicture();
-                    camera_shutter_outside.setImageDrawable(getResources().getDrawable(R.drawable.camera_shutter_outside_dashed));
-                    RotateAnimation rotate = new RotateAnimation(0, 360, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                    rotate.setDuration(3000);
-                    rotate.setInterpolator(new LinearInterpolator());
-                    rotate.setRepeatCount(Animation.INFINITE);
-                    camera_shutter_outside.startAnimation(rotate);
-
-                    //filterSelector.getViewHolder(selected).itemView.animate().setDuration(300).scaleY(1.2f).scaleX(1.2f).start();
-                    selectedIndex = selected;
-                } catch (Exception ex)
-                {
-                    ex.printStackTrace();
-                }
-            }
-        });
-
-        filterSelector.setOrientation(Orientation.HORIZONTAL);
-        filterSelector.setAdapter(filtersAdapter);
-        filterSelector.setSlideOnFling(true);
-        filterSelector.setSlideOnFlingThreshold(1800);
-        filterSelector.setItemTransitionTimeMillis(30);
-
-        filterSelector.setItemTransformer(new ScaleTransformer.Builder()
-                .setMaxScale(1.00f)
-                .setMinScale(0.8f)
-                .build());
-
-        filterSelector.post(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                filterSelector.smoothScrollToPosition(0);
-            }
-        });
-        filterSelector.addOnItemChangedListener(new onFilterChangedListener());
-
-
-        intensityIndicator.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
-        {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b)
-            {
-                Log.d(TAG, " seek value " + i);
-                if (!isFilteringEnabled) return;
-
-                float value = i / 100f;
-                filterIntensity = value;
-
-                if (!filterConfig.isEmpty())
-                {
-                    surfaceView.setFilterIntensity(value);
-                }
-
-                restartHideSeekBar();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar)
-            {
-                restartHideSeekBar();
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar)
-            {
-                restartHideSeekBar();
-            }
-        });
-    }
 
     private void buildFilters()
     {
@@ -547,6 +659,19 @@ public class CameraActivity extends AppCompatActivity
     }
 
     @Override
+    public void onBackPressed()
+    {
+        if (isPhotoFeedOpened)
+        {
+            isPhotoFeedOpened = false;
+            photoFeedWrapper.setVisibility(View.GONE);
+        } else if (selectedIndex != 0)
+        {
+            filterSelector.smoothScrollToPosition(0);
+        } else super.onBackPressed();
+    }
+
+    @Override
     public void onPause()
     {
         super.onPause();
@@ -560,14 +685,15 @@ public class CameraActivity extends AppCompatActivity
     {
         super.onResume();
         surfaceView.onResume();
-        modeSelector.post(new Runnable()
+
+        /*modeSelector.post(new Runnable()
         {
             @Override
             public void run()
             {
                 modeSelector.smoothScrollToPosition(1);
             }
-        });
+        });*/
     }
 
     private void performSwipeRight()
@@ -580,14 +706,15 @@ public class CameraActivity extends AppCompatActivity
     private void performSwipeLeft()
     {
         int next = filterSelector.getCurrentItem() + 1;
+
         if (next < filtersAdapter.getItemCount())
             filterSelector.smoothScrollToPosition(next);
-        //surfaceView.setFilterWithConfig("@curve G(0, 35)(255, 255)B(0, 133)(255, 255) @adjust brightness 0.03 @adjust contrast 1.35 @curve G(0, 13)(255, 255)B(88, 0)(255, 255) @adjust brightness -0.04 @adjust contrast 0.8 @pixblend multiply 250 223 182 255 100");
     }
 
     private void performSwipeTop()
     {
-
+        startActivity(new Intent(this, SettingsActivity.class));
+        finish();
     }
 
     private void performSwipeBottom()
@@ -597,6 +724,8 @@ public class CameraActivity extends AppCompatActivity
 
     private void performFocus(MotionEvent event)
     {
+
+
         if (!filterConfig.isEmpty())
         {
             intensityIndicator.setVisibility(View.VISIBLE);
@@ -613,6 +742,9 @@ public class CameraActivity extends AppCompatActivity
             }).start();
 
         }
+
+        if(actualCamera != BACK_CAMERA)
+            return;
 
         final float x = event.getX();
         final float y = event.getY();
@@ -646,7 +778,6 @@ public class CameraActivity extends AppCompatActivity
         hideSeekBarHandler.postDelayed(runHideSeek, seekBarWait);
     }
 
-
     private void animateThumbnail()
     {
         photoThumbnail.animate().setListener(null).cancel();
@@ -661,7 +792,6 @@ public class CameraActivity extends AppCompatActivity
                     public void onAnimationEnd(Animator animation)
                     {
                         super.onAnimationEnd(animation);
-                        //photoThumbnail.animate().setStartDelay(200).scaleX(1).scaleY(1).setDuration(50).start();
                     }
                 }).start();
     }
@@ -669,17 +799,60 @@ public class CameraActivity extends AppCompatActivity
     @SuppressLint("ClickableViewAccessibility")
     private void buildCamera()
     {
+        if(getBoolean("frontalQualityChanged"))
+            frontalPhotoQuality = getInteger("frontalImageQuality");
+        else frontalPhotoQuality = 2;
+
+        if(getBoolean("rearQualityChanged"))
+            rearPhotoQuality = getInteger("rearImageQuality");
+        else rearPhotoQuality = 1;
+
+        surfaceView.setFrontalPhotoQuality(frontalPhotoQuality);
+        surfaceView.setRearPhotoQuality(rearPhotoQuality);
+
         surfaceView.setStorageManager(storageManager);
-        surfaceView.setCameraFacing(BACK_CAMERA);
+
+        if (getBoolean("cameraChanged"))
+        {
+            actualCamera = getInteger("cameraFacing");
+
+            try
+            {
+
+                toggleCameraIcon.setImageDrawable(getResources().getDrawable(actualCamera == BACK_CAMERA ? R.drawable.ic_camera_front_white_24dp : R.drawable.ic_camera_rear_white_24dp));
+                toggleFlashIcon.setVisibility(actualCamera == BACK_CAMERA ? View.VISIBLE : View.GONE);
+
+                surfaceView.setCameraFacing(actualCamera);
+                surfaceView.onPause();
+                surfaceView.onResume();
+
+                if (filterConfig != null)
+                {
+                    surfaceView.setFilterWithConfig(filterConfig);
+                    surfaceView.setFilterIntensity(filterIntensity);
+                }
+
+            } catch (Exception ex)
+            {
+                ex.printStackTrace();
+            }
+        }
 
         surfaceView.setOnCreateCallback(new CameraView.OnCreateCallback()
         {
             @Override
             public void createOver(boolean success)
             {
-                surfaceView.setFocusMode(FOCUS_MODE_CONTINUOUS_PICTURE);
+                if(actualCamera == BACK_CAMERA)
+                    surfaceView.setFocusMode(FOCUS_MODE_CONTINUOUS_PICTURE);
+
                 isFilteringEnabled = true;
                 canTakePicture = true;
+
+                // Flash and thumbnail
+                buildPreferences();
+
+                Log.i(TAG, "Surface Created");
             }
         });
 
@@ -692,6 +865,80 @@ public class CameraActivity extends AppCompatActivity
                 return true;
             }
         });
+    }
+
+    private void buildPreferences()
+    {
+        if (getBoolean("flashChanged"))
+        {
+            int flashMode = getInteger("flashMode");
+            int drawable = 0;
+
+            switch (flashMode)
+            {
+                case FLASH_OFF:
+                    drawable = R.drawable.ic_flash_off_white_24dp;
+                    break;
+                case FLASH_ON:
+                    drawable = R.drawable.ic_flash_on_white_24dp;
+                    break;
+                case FLASH_AUTO:
+                    drawable = R.drawable.ic_flash_auto_white_24dp;
+                    break;
+            }
+
+            final  boolean response = surfaceView.setFlashLightMode(flashMode);
+
+            final int finalDrawable = drawable;
+
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    if (response)
+                        toggleFlashIcon.setImageDrawable(getResources().getDrawable(finalDrawable));
+                }
+            });
+
+            actualFlash = flashMode;
+        }
+
+
+        final String lastTakenThumb = getString("lastPhotoThumbnail");
+        String lastTakenOriginal = getString("lastPhotoOriginal");
+
+        PhotoItem currentPhoto = new PhotoItem();
+
+        if (!lastTakenThumb.isEmpty() && !lastTakenOriginal.isEmpty())
+        {
+            runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    GlideApp
+                            .with(getApplicationContext())
+                            .load(privateStorageManager.getFile(lastTakenThumb))
+                            .apply(RequestOptions.circleCropTransform())
+                            .into(photoThumbnail);
+
+                    photoThumbnail.setScaleX(1f);
+                    photoThumbnail.setScaleY(1f);
+                    photoThumbnail.setAlpha(1f);
+                    photoThumbnail.setVisibility(View.VISIBLE);
+
+                }
+            });
+
+            currentPhoto.setThumbPath(privateStorageManager.getFile(lastTakenThumb).getAbsolutePath());
+            currentPhoto.setBigPath(privateStorageManager.getFile(lastTakenOriginal).getAbsolutePath());
+            previewPhotos.add(0, currentPhoto);
+            photoFeedAdapter.notifyItemInserted(0);
+            photoFeed.setAdapter(photoFeedAdapter);
+        }
+
+
     }
 
     private class CameraGestureListener extends GestureDetector.SimpleOnGestureListener
@@ -753,10 +1000,12 @@ public class CameraActivity extends AppCompatActivity
         }
     }
 
-    private class onModeChangedListener implements DiscreteScrollView.OnItemChangedListener<RecyclerView.ViewHolder>
+    private class onModeChangedListener implements
+            DiscreteScrollView.OnItemChangedListener<RecyclerView.ViewHolder>
     {
         @Override
-        public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder, int adapterPosition)
+        public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder,
+                                         int adapterPosition)
         {
             if (viewHolder != null)
             {
@@ -819,6 +1068,9 @@ public class CameraActivity extends AppCompatActivity
                     }).start();
                 }
             }).start();
+
+            filtersAdapter.notifyChangedItem(adapterPosition);
+            selectedIndex = adapterPosition;
         }
     }
 }
