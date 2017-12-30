@@ -6,59 +6,40 @@
     android:layout_height="match_parent"
     tools:context=".views.CameraActivity">
 
-    <net.sparkly.projectx.views.widgets.CameraView
+    <org.wysaid.view.ImageGLSurfaceView
         android:id="@+id/surfaceView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_above="@id/containerTools"
+        android:layout_height="match_parent"/>
 
-
-    <com.yarolegovich.discretescrollview.DiscreteScrollView
-        android:id="@+id/modeSelector"
+    <TextView
+        android:id="@+id/filterIndicator"
+        android:layout_above="@id/containerTools"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="12dp"
-        android:layout_marginRight="12dp"
-        android:layout_marginTop="20dp" />
+        android:padding="12dp"
+        android:text="Normal"
+        android:textAlignment="center"
+        android:textAllCaps="true"
+        android:textColor="#FFF"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
     <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true">
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
-        <ImageView
-            android:id="@+id/photoThumbnailBorder"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:layout_alignParentBottom="true"
-            android:layout_centerInParent="true"
-            android:layout_marginBottom="25dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:scaleType="centerCrop"
-            android:src="@drawable/camera_shutter_inside"
-            android:visibility="gone"
-            tools:ignore="ContentDescription" />
-
-        <ImageView
-            android:id="@+id/photoThumbnail"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="20dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:scaleType="centerCrop"
-            android:background="@drawable/camera_shutter_inside"
-            android:visibility="gone"
-            android:padding="3dp"
-            tools:ignore="ContentDescription" />
-
-
-
+        <ProgressBar
+            android:theme="@style/Progressbar.White"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:id="@+id/progressWorkingIndicator"
+            android:indeterminate="true"
+            android:padding="12dp"
+            android:visibility="visible" />
     </RelativeLayout>
+
 
     <android.support.v7.widget.AppCompatSeekBar
         android:id="@+id/intensityIndicator"
@@ -79,22 +60,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:background="#000"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:id="@+id/containerTools"
         android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/filterIndicator"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:text="Normal"
-            android:textAlignment="center"
-            android:textAllCaps="true"
-            android:textColor="#FFF"
-            android:textSize="40sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
-
-
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -146,6 +116,7 @@
 
             <RelativeLayout
                 android:layout_width="0dp"
+                android:visibility="gone"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1">
@@ -165,6 +136,7 @@
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_margin="20dp"
+                android:visibility="gone"
                 android:layout_weight="1">
 
                 <ImageButton
@@ -180,6 +152,7 @@
 
             <RelativeLayout
                 android:layout_width="0dp"
+                android:visibility="gone"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:layout_weight="1">
@@ -199,19 +172,6 @@
 
         </LinearLayout>
     </LinearLayout>
-
-    <RelativeLayout
-        android:id="@+id/photoFeedWrapper"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#000000"
-        android:visibility="gone">
-
-        <com.yarolegovich.discretescrollview.DiscreteScrollView
-            android:id="@+id/photoFeed"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </RelativeLayout>
 
 
 </RelativeLayout>

@@ -9,6 +9,8 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -375,7 +377,6 @@ public class CameraActivity extends AppActivity
                 {
                     super.onAnimationEnd(animation);
                     intensityIndicator.setVisibility(View.GONE);
-                    goSettings.setVisibility(View.GONE);
                 }
             }).start();
         }
@@ -438,26 +439,36 @@ public class CameraActivity extends AppActivity
                     @Override
                     public void takePictureOK(Bitmap bmp)
                     {
-                        @SuppressLint("SimpleDateFormat") String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                        @SuppressLint("SimpleDateFormat") String timeStamp =
+                                new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
                         final String name = File.separator + "IMG_" + timeStamp + ".jpg";
                         storageManager.createFile(name, bmp);
                         bmp.recycle();
+
+                        MediaScannerConnection.scanFile(getApplicationContext(),
+                                new String[]{storageManager.getFile(name).getPath()}, null,
+                                new MediaScannerConnection.OnScanCompletedListener()
+                                {
+                                    @Override
+                                    public void onScanCompleted(String path, Uri uri)
+                                    {
+                                        Log.i(TAG, "Scanned " + path);
+                                    }
+                                });
 
                         mActivity.runOnUiThread(new Runnable()
                         {
                             @Override
                             public void run()
                             {
-                                //previewPhotos.add(0, new PhotoItem(storageManager.getFile(name).getAbsolutePath()));
-                                //photoFeedAdapter.notifyItemInserted(0);
+
                                 int positionOfScroll = photoFeed.getCurrentItem();
-                                int position = previewPhotos.indexOf(currentPhoto);
                                 currentPhoto.setBigPath(storageManager.getFile(name).getAbsolutePath());
                                 setString("lastPhotoOriginal", name);
-                                //previewPhotos.remove(position);
-                                //previewPhotos.add(0, currentPhoto);
+
                                 photoFeedAdapter.notifyDataSetChanged();
                                 photoFeed.scrollToPosition(positionOfScroll);
+
                                 Log.d(TAG, "Done with big");
                                 Log.d(TAG, (System.currentTimeMillis() - startTime2) + "ms taking and saving big");
 
@@ -476,7 +487,7 @@ public class CameraActivity extends AppActivity
             public void run()
             {
                 final long startTime = System.currentTimeMillis();
-                // Take shot from screen
+
                 surfaceView.takeShot(new CameraSurfaceView.TakePictureCallback()
                 {
                     @Override
@@ -686,14 +697,14 @@ public class CameraActivity extends AppActivity
         super.onResume();
         surfaceView.onResume();
 
-        /*modeSelector.post(new Runnable()
+        modeSelector.post(new Runnable()
         {
             @Override
             public void run()
             {
                 modeSelector.smoothScrollToPosition(1);
             }
-        });*/
+        });
     }
 
     private void performSwipeRight()
@@ -743,7 +754,7 @@ public class CameraActivity extends AppActivity
 
         }
 
-        if(actualCamera != BACK_CAMERA)
+        if (actualCamera != BACK_CAMERA)
             return;
 
         final float x = event.getX();
@@ -799,11 +810,11 @@ public class CameraActivity extends AppActivity
     @SuppressLint("ClickableViewAccessibility")
     private void buildCamera()
     {
-        if(getBoolean("frontalQualityChanged"))
+        if (getBoolean("frontalQualityChanged"))
             frontalPhotoQuality = getInteger("frontalImageQuality");
         else frontalPhotoQuality = 2;
 
-        if(getBoolean("rearQualityChanged"))
+        if (getBoolean("rearQualityChanged"))
             rearPhotoQuality = getInteger("rearImageQuality");
         else rearPhotoQuality = 1;
 
@@ -843,7 +854,7 @@ public class CameraActivity extends AppActivity
             @Override
             public void createOver(boolean success)
             {
-                if(actualCamera == BACK_CAMERA)
+                if (actualCamera == BACK_CAMERA)
                     surfaceView.setFocusMode(FOCUS_MODE_CONTINUOUS_PICTURE);
 
                 isFilteringEnabled = true;
@@ -887,7 +898,7 @@ public class CameraActivity extends AppActivity
                     break;
             }
 
-            final  boolean response = surfaceView.setFlashLightMode(flashMode);
+            final boolean response = surfaceView.setFlashLightMode(flashMode);
 
             final int finalDrawable = drawable;
 
@@ -1000,12 +1011,10 @@ public class CameraActivity extends AppActivity
         }
     }
 
-    private class onModeChangedListener implements
-            DiscreteScrollView.OnItemChangedListener<RecyclerView.ViewHolder>
+    private class onModeChangedListener implements DiscreteScrollView.OnItemChangedListener<RecyclerView.ViewHolder>
     {
         @Override
-        public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder,
-                                         int adapterPosition)
+        public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder, int adapterPosition)
         {
             if (viewHolder != null)
             {
@@ -1024,6 +1033,14 @@ public class CameraActivity extends AppActivity
                 selectedCameraModes.clear();
                 selectedCameraModes.add(adapterPosition);
                 viewHolder.itemView.setSelected(true);
+
+                // TODO CHANGE WITH ID OF GALLERY
+                if(adapterPosition == 0 && isFilteringEnabled)
+                {
+                    startActivity(new Intent(getApplicationContext(), GalleryActivity.class));
+                    finish();
+                }
+
             }
         }
     }

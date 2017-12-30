@@ -25,7 +25,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".views.SettingsActivity"></activity>
+        <activity android:name=".views.SettingsActivity" />
+        <activity android:name=".views.GalleryActivity" />
+        <activity android:name=".views.EditorActivity"></activity>
     </application>
 
 </manifest>
