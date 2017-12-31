@@ -4,11 +4,13 @@
     android:id="@+id/relativeWrapper"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#000"
     tools:context=".views.CameraActivity">
 
     <org.wysaid.view.ImageGLSurfaceView
         android:id="@+id/surfaceView"
         android:layout_width="match_parent"
+        android:layout_margin="16dp"
         android:layout_above="@id/containerTools"
         android:layout_height="match_parent"/>
 
@@ -17,7 +19,7 @@
         android:layout_above="@id/containerTools"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp"
+        android:layout_margin="12dp"
         android:text="Normal"
         android:textAlignment="center"
         android:textAllCaps="true"
@@ -34,6 +36,8 @@
             android:theme="@style/Progressbar.White"
             android:layout_width="50dp"
             android:layout_height="50dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="20dp"
             android:id="@+id/progressWorkingIndicator"
             android:indeterminate="true"
             android:padding="12dp"
