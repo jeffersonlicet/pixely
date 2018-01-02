@@ -1,0 +1,1 @@
+krblend addrev texture_color_1.jpg 30

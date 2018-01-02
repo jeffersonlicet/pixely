@@ -1,0 +1,1 @@
+@adjust brightness -0.09 @adjust contrast 0.75 @adjust saturation 0 @adjust level 0 1 0.68 

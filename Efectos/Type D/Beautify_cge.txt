@@ -1,0 +1,1 @@
+@beautify face 1 480 640
