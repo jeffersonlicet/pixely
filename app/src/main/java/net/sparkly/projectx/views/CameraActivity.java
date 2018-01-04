@@ -229,7 +229,7 @@ public class CameraActivity extends AppActivity
 
         modes.add(new SingleModeItem(0, "GALLERY"));
         modes.add(new SingleModeItem(1, "Portrait"));
-        modes.add(new SingleModeItem(2, "Video"));
+        //modes.add(new SingleModeItem(2, "Video"));
 
         adapter = new ModeListAdapter(this, modes, modeSelector, selectedCameraModes);
         modeSelector.setOrientation(Orientation.HORIZONTAL);
@@ -724,8 +724,8 @@ public class CameraActivity extends AppActivity
 
     private void performSwipeTop()
     {
-        startActivity(new Intent(this, SettingsActivity.class));
-        finish();
+        //startActivity(new Intent(this, SettingsActivity.class));
+       // finish();
     }
 
     private void performSwipeBottom()

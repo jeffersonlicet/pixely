@@ -52,7 +52,7 @@
             android:focusable="true"
             android:scaleType="centerCrop"
             android:background="@drawable/camera_shutter_inside"
-            android:visibility="gone"
+            android:visibility="visible"
             android:padding="3dp"
             tools:ignore="ContentDescription" />
 
@@ -144,38 +144,40 @@
             android:orientation="horizontal"
             android:weightSum="3">
 
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:layout_gravity="center_vertical"
+                android:weightSum="2"
                 android:layout_weight="1">
 
                 <ImageButton
                     android:id="@+id/toggleFlash"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginStart="20dp"
+                    android:layout_weight="1"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_flash_auto_white_24dp"
                     tools:ignore="ContentDescription" />
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="0dp"
-                android:layout_height="40dp"
-                android:layout_margin="20dp"
-                android:layout_weight="1">
 
                 <ImageButton
                     android:id="@+id/goSettings"
-                    android:layout_centerInParent="true"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_settings_white_24dp"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     tools:ignore="ContentDescription" />
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="85dp"
+                android:layout_weight="1">
+
+
             </RelativeLayout>
 
             <RelativeLayout

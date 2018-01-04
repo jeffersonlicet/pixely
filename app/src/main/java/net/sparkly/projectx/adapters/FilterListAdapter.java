@@ -14,12 +14,17 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.FutureTarget;
+import com.bumptech.glide.request.RequestOptions;
 import com.yarolegovich.discretescrollview.DiscreteScrollView;
 
 import net.sparkly.projectx.R;
 import net.sparkly.projectx.models.FilterItem;
 import net.sparkly.projectx.models.SingleModeItem;
+import net.sparkly.projectx.views.EditorActivity;
 
+import java.io.File;
 import java.util.List;
 
 public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.ViewHolder>
@@ -71,21 +76,21 @@ public class FilterListAdapter extends RecyclerView.Adapter<FilterListAdapter.Vi
 
         try
         {
-            Bitmap original = null;
 
-            if (filters.get(holder.getAdapterPosition()).getId() == 0)
-            {
-                holder.filterItemThumbnail.setImageDrawable(context.getResources().getDrawable(R.drawable.camera_shutter_inside));
+                Bitmap original = null;
 
-            } else
-            {
-                original = BitmapFactory.decodeResource(context.getResources(), filters.get(holder.getAdapterPosition()).getThumbnail());
-                Bitmap b = Bitmap.createScaledBitmap(original, 100, 100, false);
+                if (filters.get(holder.getAdapterPosition()).getId() == 0) {
+                    holder.filterItemThumbnail.setImageDrawable(context.getResources().getDrawable(R.drawable.camera_shutter_inside));
 
-                RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(context.getResources(), b);
-                roundedBitmapDrawable.setCircular(true);
-                holder.filterItemThumbnail.setImageDrawable(roundedBitmapDrawable);
-            }
+                } else {
+                    original = BitmapFactory.decodeResource(context.getResources(), filters.get(holder.getAdapterPosition()).getThumbnail());
+                    Bitmap b = Bitmap.createScaledBitmap(original, 100, 100, false);
+
+                    RoundedBitmapDrawable roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(context.getResources(), b);
+                    roundedBitmapDrawable.setCircular(true);
+                    holder.filterItemThumbnail.setImageDrawable(roundedBitmapDrawable);
+                }
+
         } catch (Exception ex)
         {
             ex.printStackTrace();

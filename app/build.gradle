@@ -44,4 +44,5 @@ dependencies {
     compile 'com.snatik:storage:2.1.0'
     implementation 'com.github.bumptech.glide:glide:4.4.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.4.0'
+    compile 'com.github.chrisbanes:PhotoView:2.1.3'
 }
