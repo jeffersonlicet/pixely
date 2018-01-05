@@ -4,9 +4,9 @@
     android:id="@+id/relativeWrapper"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".views.CameraActivity">
+    tools:context=".activities.CameraActivity">
 
-    <net.sparkly.projectx.views.widgets.CameraView
+    <net.sparkly.pixely.widgets.CameraView
         android:id="@+id/surfaceView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

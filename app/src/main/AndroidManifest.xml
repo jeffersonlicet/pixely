@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="net.sparkly.projectx">
+    package="net.sparkly.pixely">
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -10,18 +10,17 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".views.CameraActivity"
+            android:name="net.sparkly.pixely.activities.CameraActivity"
             android:screenOrientation="portrait" />
 
-        <activity android:name=".views.SettingsActivity" />
-        <activity android:name=".views.GalleryActivity" />
-        <activity android:name=".views.EditorActivity" />
-        <activity android:name=".views.PhotoActivity" />
-        <activity android:name=".views.SplashActivity">
+        <activity android:name="net.sparkly.pixely.activities.SettingsActivity" />
+        <activity android:name="net.sparkly.pixely.activities.GalleryActivity" />
+        <activity android:name="net.sparkly.pixely.activities.EditorActivity" />
+        <activity android:name="net.sparkly.pixely.activities.PhotoActivity" />
+        <activity android:name="net.sparkly.pixely.activities.SplashActivity">
             <intent-filter>
             <action android:name="android.intent.action.MAIN" />
 
