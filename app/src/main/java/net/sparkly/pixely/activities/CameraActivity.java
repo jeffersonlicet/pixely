@@ -246,8 +246,6 @@ public class CameraActivity extends BaseActivity {
 
         modeSelector.addOnItemChangedListener(new onModeChangedListener());
 
-        buildFilters();
-
         filtersAdapter = new FilterListAdapter(this, filters, filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener() {
             @Override
             public void onClickSelectedItemListener(int selected) {
@@ -586,25 +584,6 @@ public class CameraActivity extends BaseActivity {
         }
     };
 
-    private void buildFilters() {
-        try {
-            int nFilters = getResources().getInteger(R.integer.nFilters);
-            Log.d(TAG, "Shutter inside id: " + R.drawable.camera_shutter_inside);
-            filters.add(new FilterItem(0, getString(R.string.nameFilter0), "", 1, R.drawable.camera_shutter_inside));
-
-
-            for (int i = 1; i < nFilters; i++) {
-                Log.d(TAG, "Creating filter");
-                String name = getString(getResources().getIdentifier("nameFilter" + i, "string", getPackageName()));
-                String params = getString(getResources().getIdentifier("configFilter" + i, "string", getPackageName()));
-                float intensity = Float.parseFloat(getString(getResources().getIdentifier("intensityFilter" + i, "string", getPackageName())));
-                String thumbName = getString(getResources().getIdentifier("thumbFilter" + i, "string", getPackageName()));
-                filters.add(new FilterItem(i, name, params, intensity, getResources().getIdentifier(thumbName, "drawable", getPackageName())));
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
 
     @Override
     public void onBackPressed() {
@@ -817,9 +796,9 @@ public class CameraActivity extends BaseActivity {
 
 
         final String lastTakenThumb = getString("lastPhotoThumbnail");
-        String lastTakenOriginal = getString("lastPhotoOriginal");
+        final String lastTakenOriginal = getString("lastPhotoOriginal");
 
-        PhotoItem currentPhoto = new PhotoItem();
+        final PhotoItem currentPhoto = new PhotoItem();
 
         if (!lastTakenThumb.isEmpty() && !lastTakenOriginal.isEmpty()) {
             runOnUiThread(new Runnable() {
@@ -836,17 +815,15 @@ public class CameraActivity extends BaseActivity {
                     photoThumbnail.setAlpha(1f);
                     photoThumbnail.setVisibility(View.VISIBLE);
 
-                }
-            });
-
             currentPhoto.setThumbPath(privateStorageManager.getFile(lastTakenThumb).getAbsolutePath());
             currentPhoto.setBigPath(privateStorageManager.getFile(lastTakenOriginal).getAbsolutePath());
             previewPhotos.add(0, currentPhoto);
             photoFeedAdapter.notifyItemInserted(0);
             photoFeed.setAdapter(photoFeedAdapter);
+
+                }
+            });
         }
-
-
     }
 
     private class CameraGestureListener extends GestureDetector.SimpleOnGestureListener {

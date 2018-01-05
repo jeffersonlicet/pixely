@@ -48,14 +48,13 @@
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="20dp"
+            android:background="@drawable/camera_shutter_inside"
             android:clickable="true"
             android:focusable="true"
-            android:scaleType="centerCrop"
-            android:background="@drawable/camera_shutter_inside"
-            android:visibility="visible"
             android:padding="3dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
             tools:ignore="ContentDescription" />
-
 
 
     </RelativeLayout>
@@ -63,17 +62,17 @@
     <android.support.v7.widget.AppCompatSeekBar
         android:id="@+id/intensityIndicator"
         android:layout_width="220dp"
-        android:background="@drawable/seekbar_background"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:padding="12dp"
-        android:alpha="0"
         android:layout_centerInParent="true"
+        android:layout_marginBottom="12dp"
+        android:alpha="0"
+        android:background="@drawable/seekbar_background"
         android:clickable="true"
         android:focusable="true"
         android:max="100"
-        android:visibility="gone"
-        android:progress="0" />
+        android:padding="12dp"
+        android:progress="0"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -93,8 +92,6 @@
             android:textSize="40sp"
             android:textStyle="bold"
             android:visibility="gone" />
-
-
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -147,10 +144,10 @@
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:layout_gravity="center_vertical"
-                android:weightSum="2"
-                android:layout_weight="1">
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:weightSum="2">
 
                 <ImageButton
                     android:id="@+id/toggleFlash"
@@ -164,8 +161,8 @@
                 <ImageButton
                     android:id="@+id/goSettings"
                     android:layout_width="0dp"
-                    android:layout_weight="1"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_settings_white_24dp"
                     android:visibility="visible"

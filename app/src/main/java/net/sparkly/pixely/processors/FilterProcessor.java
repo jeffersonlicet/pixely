@@ -38,7 +38,7 @@ public class FilterProcessor {
                         surface.getImageHandler().setFilterIntensity(value);
                         surface.requestRender();
 
-                        if(callback != null)
+                        if (callback != null)
                             callback.onIntensityChanged();
                     }
                 });
@@ -46,7 +46,7 @@ public class FilterProcessor {
         }).start();
     }
 
-    void setFilter(final ImageGLSurfaceView surface,final int index,final FilteringCallback callback) {
+    void setFilter(final ImageGLSurfaceView surface, final int index, final FilteringCallback callback) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -59,7 +59,7 @@ public class FilterProcessor {
                         surface.getImageHandler().processFilters();
                         surface.requestRender();
 
-                        if(callback != null)
+                        if (callback != null)
                             callback.filterChanged();
                     }
                 });
@@ -80,7 +80,7 @@ public class FilterProcessor {
                         surface.getImageHandler().processFilters();
                         surface.requestRender();
 
-                        if(callback != null)
+                        if (callback != null)
                             callback.filterChanged();
                     }
                 });
@@ -98,7 +98,7 @@ public class FilterProcessor {
                         surface.setFilterIntensity(value);
                         surface.requestRender();
 
-                        if(callback != null)
+                        if (callback != null)
                             callback.onIntensityChanged();
                     }
                 });
@@ -116,7 +116,7 @@ public class FilterProcessor {
                         surface.setFilterWithConfig(getFilters().get(index).getParams());
                         surface.setFilterIntensity(getFilters().get(index).getIntensity());
 
-                        if(callback != null)
+                        if (callback != null)
                             callback.filterChanged();
                     }
                 });
@@ -134,7 +134,7 @@ public class FilterProcessor {
                         surface.setFilterWithConfig(getFilters().get(index).getParams());
                         surface.setFilterIntensity(intensity);
 
-                        if(callback != null)
+                        if (callback != null)
                             callback.filterChanged();
                     }
                 });
@@ -161,23 +161,26 @@ public class FilterProcessor {
     }
 
     private void buildFilters() {
-        try {
-            int nFilters = context.getResources().getInteger(R.integer.nFilters);
-            Log.d(TAG, "Shutter inside id: " + R.drawable.camera_shutter_inside);
-            filters.add(new FilterItem(0, context.getString(R.string.nameFilter0), "", 1, R.drawable.camera_shutter_inside));
+
+        int nFilters = context.getResources().getInteger(R.integer.nFilters);
+        Log.d(TAG, "Shutter inside id: " + R.drawable.camera_shutter_inside);
+
+        filters.add(new FilterItem(0, context.getString(R.string.nameFilter0), "", 1, R.drawable.camera_shutter_inside));
 
 
-            for (int i = 1; i < nFilters; i++) {
+        for (int i = 1; i < nFilters; i++) {
+            try {
                 Log.d(TAG, "Creating filter");
                 String name = context.getString(context.getResources().getIdentifier("nameFilter" + i, "string", context.getPackageName()));
                 String params = context.getString(context.getResources().getIdentifier("configFilter" + i, "string", context.getPackageName()));
                 float intensity = Float.parseFloat(context.getString(context.getResources().getIdentifier("intensityFilter" + i, "string", context.getPackageName())));
                 String thumbName = context.getString(context.getResources().getIdentifier("thumbFilter" + i, "string", context.getPackageName()));
                 filters.add(new FilterItem(i, name, params, intensity, context.getResources().getIdentifier(thumbName, "drawable", context.getPackageName())));
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
+
 
     }
 

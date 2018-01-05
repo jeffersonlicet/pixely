@@ -34,10 +34,6 @@
     <string name="intensityFilter4" translatable="false">0.8</string>
     <string name="thumbFilter4" translatable="false">pinkville</string>
 
-    <string name="nameFilter5" translatable="false">Sketch</string>
-    <string name="configFilter5" translatable="false" >#unpack \@style sketch 0.9</string>
-    <string name="intensityFilter5" translatable="false">0.82</string>
-    <string name="thumbFilter5" translatable="false">sketch</string>
 
     <!-- TYPE A -->
     <string name="nameFilter6" translatable="false">Bertha</string>
