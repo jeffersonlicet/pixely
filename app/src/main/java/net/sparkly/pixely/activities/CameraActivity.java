@@ -34,6 +34,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.request.RequestOptions;
+import com.crashlytics.android.Crashlytics;
 import com.yarolegovich.discretescrollview.DiscreteScrollView;
 import com.yarolegovich.discretescrollview.Orientation;
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer;
@@ -90,6 +91,7 @@ public class CameraActivity extends BaseActivity {
 
     private boolean canTakePicture;
     private boolean isFilteringEnabled;
+    private boolean isModeSelectorEnabled;
     private boolean pendingToggleFlash;
     private boolean pendingToggleCamera;
     private boolean wasFocused;
@@ -197,6 +199,8 @@ public class CameraActivity extends BaseActivity {
         setContentView(R.layout.activity_camera);
         ButterKnife.bind(this);
 
+        Crashlytics.log("Testing crashlytics");
+
         focusMarkerLayout = new FocusMarkerLayout(this);
         focusMarkerLayout.setLayoutParams(new ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -237,14 +241,23 @@ public class CameraActivity extends BaseActivity {
             .setMaxScale(0.8f)
             .build());
 
+        modeSelector.addOnItemChangedListener(new onModeChangedListener());
+
         modeSelector.post(new Runnable() {
             @Override
             public void run() {
-                modeSelector.smoothScrollToPosition(1);
+                modeSelector.scrollToPosition(1);
+                isModeSelectorEnabled = true;
             }
         });
 
-        modeSelector.addOnItemChangedListener(new onModeChangedListener());
+        /*modeSelector.post(new Runnable() {
+            @Override
+            public void run() {
+                //modeSelector.smoothScrollToPosition(1);
+            }
+        });*/
+
 
         filtersAdapter = new FilterListAdapter(this, filters, filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener() {
             @Override
@@ -608,12 +621,7 @@ public class CameraActivity extends BaseActivity {
         super.onResume();
         surfaceView.onResume();
 
-        modeSelector.post(new Runnable() {
-            @Override
-            public void run() {
-                modeSelector.smoothScrollToPosition(1);
-            }
-        });
+
     }
 
     private void performSwipeRight() {
@@ -889,10 +897,13 @@ public class CameraActivity extends BaseActivity {
                 viewHolder.itemView.setSelected(true);
 
                 // TODO CHANGE WITH ID OF GALLERY
-                if (adapterPosition == 0 && isFilteringEnabled) {
+                if (adapterPosition == 0 && isModeSelectorEnabled) {
                     startActivity(new Intent(getApplicationContext(), GalleryActivity.class));
                     finish();
                 }
+
+                Log.d(TAG, adapterPosition + "selected item");
+                Log.d(TAG, isModeSelectorEnabled + " selector enabled");
 
             }
         }

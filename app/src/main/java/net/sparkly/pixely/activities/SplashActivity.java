@@ -1,7 +1,9 @@
 package net.sparkly.pixely.activities;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -10,9 +12,13 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 
 import net.sparkly.pixely.R;
 
@@ -24,21 +30,20 @@ import butterknife.ButterKnife;
 public class SplashActivity extends AppCompatActivity {
 
     private static final int PERMISSION_ALL = 1;
-
+    private boolean canProceed;
+    MaterialDialog request;
+    MaterialDialog denied;
     /**
      *
      */
     private String[] PERMISSIONS = {
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.CAMERA,
-            Manifest.permission.SYSTEM_ALERT_WINDOW,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.CAMERA,
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_splash);
-        ButterKnife.bind(this);
 
         try {
             Window w = getWindow();
@@ -47,6 +52,10 @@ public class SplashActivity extends AppCompatActivity {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+
+        setContentView(R.layout.activity_splash);
+        ButterKnife.bind(this);
+
 
         askMarshMallowPermission();
     }
@@ -59,12 +68,7 @@ public class SplashActivity extends AppCompatActivity {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     initApp();
                 } else {
-                    Context context = getApplicationContext();
-                    CharSequence text = "Necesitamos permisos para acceder a tu cámara.";
-                    int duration = Toast.LENGTH_LONG;
-                    Toast toast = Toast.makeText(context, text, duration);
-                    toast.show();
-                    askMarshMallowPermission();
+                    onNegative();
                 }
             }
         }
@@ -82,19 +86,96 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void askMarshMallowPermission() {
+        Log.d("HOLA", hasPermissions(this, PERMISSIONS) + " Permissions");
         if (!hasPermissions(this, PERMISSIONS)) {
-            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
+
+            try {
+
+                request = new MaterialDialog.Builder(this)
+                    .title("Hello")
+                    .content("Welcome to Pixely. Next, we will ask the necessary permissions to give you the best experience.")
+                    .positiveText("Continue")
+                    .negativeText("Cancel")
+                    .canceledOnTouchOutside(false)
+                    .onPositive(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            onPositive(request);
+                        }
+                    })
+                    .dismissListener(new DialogInterface.OnDismissListener() {
+                        @Override
+                        public void onDismiss(DialogInterface dialogInterface) {
+                            if(canProceed)
+                            {
+                                requestPerm();
+                            }
+                        }
+                    })
+                    .onNegative(new MaterialDialog.SingleButtonCallback() {
+                        @Override
+                        public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                            onNegative();
+                        }
+                    }).build();
+
+                request.show();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
         } else {
             initApp();
         }
     }
 
+    private void onPositive(MaterialDialog dialog) {
+        canProceed = true;
+        dialog.dismiss();
+    }
+
+    private void requestPerm()
+    {
+        ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
+
+    }
+
+    private void onNegative() {
+        canProceed = false;
+
+        denied = new MaterialDialog.Builder(this)
+            .title("Hello")
+            .content("To work properly we need you to grant the permissions.")
+            .positiveText("Tray again")
+            .negativeText("Close")
+            .canceledOnTouchOutside(false)
+            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    onPositive(denied);
+                }
+            })
+            .dismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialogInterface) {
+                    if(canProceed)
+                    {
+                        requestPerm();
+                    }
+                }
+            })
+            .onNegative(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    finish();
+                }
+            }).build();
+
+        denied.show();
+    }
+
     private void initApp() {
-
-
-
         Timer tm = new Timer();
-
         TimerTask tt = new TimerTask() {
             @Override
             public void run() {
@@ -105,8 +186,7 @@ public class SplashActivity extends AppCompatActivity {
             }
         };
 
-        tm.schedule(tt, 2000);
-
+        tm.schedule(tt, 10);
 
     }
 }
