@@ -16,6 +16,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import com.crashlytics.android.Crashlytics;
+
 import net.sparkly.pixely.utils.ClearColor;
 import net.sparkly.pixely.utils.StorageManager;
 
@@ -41,8 +43,7 @@ import static android.hardware.Camera.Parameters.FLASH_MODE_AUTO;
 import static android.hardware.Camera.Parameters.FLASH_MODE_OFF;
 import static android.hardware.Camera.Parameters.FLASH_MODE_ON;
 
-public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener
-{
+public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener {
     public static final String TAG = CameraView.class.getSimpleName();
     private static final int BACK_CAMERA = 0;
 
@@ -71,8 +72,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     private int frontalPhotoQuality;
     private int rearPhotoQuality;
 
-    public CameraView(Context context, AttributeSet attrs)
-    {
+    public CameraView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         setEGLContextClientVersion(2);
@@ -89,21 +89,17 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     }
 
     @Override
-    public void onFrameAvailable(SurfaceTexture surfaceTexture)
-    {
+    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
         requestRender();
     }
 
     @Override
-    public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig)
-    {
-        if (!cameraInstance().isCameraOpened())
-        {
+    public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
+        if (!cameraInstance().isCameraOpened()) {
             int facing = mIsCameraBackForward ? Camera.CameraInfo.CAMERA_FACING_BACK :
-                    Camera.CameraInfo.CAMERA_FACING_FRONT;
+                Camera.CameraInfo.CAMERA_FACING_FRONT;
 
-            if (!cameraInstance().tryOpenCamera(null, facing))
-            {
+            if (!cameraInstance().tryOpenCamera(null, facing)) {
                 Log.e(TAG, "Error opening camera");
                 //TODO ABORT ALL
             }
@@ -120,42 +116,27 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
             Camera.Size bestPictureSize = null;
 
-            if(facing == Camera.CameraInfo.CAMERA_FACING_BACK)
-            {
+            if (facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
                 Log.d(TAG, rearPhotoQuality + " Quality setted");
 
-                if(rearPhotoQuality == 1)
-                {
+                if (rearPhotoQuality == 1) {
                     bestPictureSize = getMiddlePictureSize(cameraInstance().getParams());
                     cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
-                }
-
-                else if(rearPhotoQuality == 2)
-                {
+                } else if (rearPhotoQuality == 2) {
                     bestPictureSize = getBestPictureSize(cameraInstance().getParams());
                     cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
-                }
-
-                else
-                {
+                } else {
                     bestPictureSize = getLowPictureSize(cameraInstance().getParams());
                     cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
                 }
             } else {
-                if(frontalPhotoQuality == 1)
-                {
+                if (frontalPhotoQuality == 1) {
                     bestPictureSize = getMiddlePictureSize(cameraInstance().getParams());
                     cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
-                }
-
-                else if(frontalPhotoQuality == 2)
-                {
+                } else if (frontalPhotoQuality == 2) {
                     bestPictureSize = getBestPictureSize(cameraInstance().getParams());
                     cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
-                }
-
-                else
-                {
+                } else {
                     bestPictureSize = getLowPictureSize(cameraInstance().getParams());
                     cameraInstance().setPictureSize(bestPictureSize.width, bestPictureSize.height, true);
                 }
@@ -184,8 +165,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
         mFrameRecorder = new CGEFrameRecorder();
         mIsTransformMatrixSet = false;
 
-        if (!mFrameRecorder.init(mRecordWidth, mRecordHeight, mRecordWidth, mRecordHeight))
-        {
+        if (!mFrameRecorder.init(mRecordWidth, mRecordHeight, mRecordWidth, mRecordHeight)) {
             Log.e(TAG, "Frame Recorder init failed!");
         }
 
@@ -195,19 +175,16 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
         requestRender();
 
-        if (mOnCreateCallback != null)
-        {
+        if (mOnCreateCallback != null) {
             mOnCreateCallback.createOver(cameraInstance().getCameraDevice() != null);
         }
     }
 
     @Override
-    public void onSurfaceChanged(GL10 gl10, int width, int height)
-    {
+    public void onSurfaceChanged(GL10 gl10, int width, int height) {
         GLES20.glClearColor(mClearColor.r, mClearColor.g, mClearColor.b, mClearColor.a);
 
-        if (!cameraInstance().isPreviewing())
-        {
+        if (!cameraInstance().isPreviewing()) {
             //Set the view dimensions
             mViewWidth = width;
             mViewHeight = height;
@@ -222,17 +199,14 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder)
-    {
+    public void surfaceDestroyed(SurfaceHolder holder) {
         super.surfaceDestroyed(holder);
         cameraInstance().stopCamera();
     }
 
     @Override
-    public void onDrawFrame(GL10 gl10)
-    {
-        if (mSurfaceTexture == null || !cameraInstance().isPreviewing())
-        {
+    public void onDrawFrame(GL10 gl10) {
+        if (mSurfaceTexture == null || !cameraInstance().isPreviewing()) {
             Log.d(TAG, "onDrawFrame() mSurfaceTexture == null || !cameraInstance().isPreviewing()");
             return;
         }
@@ -253,74 +227,56 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     }
 
     @Override
-    public void onPause()
-    {
+    public void onPause() {
         cameraInstance().stopCamera();
         super.onPause();
     }
 
-    public synchronized void setFilterWithConfig(final String config)
-    {
-        queueEvent(new Runnable()
-        {
+    public synchronized void setFilterWithConfig(final String config) {
+        queueEvent(new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
 
-                if (mFrameRecorder != null)
-                {
+                if (mFrameRecorder != null) {
                     mFrameRecorder.setFilterWidthConfig(config);
-                } else
-                {
+                } else {
                     Log.e(TAG, "setFilterWithConfig after release!!");
                 }
             }
         });
     }
 
-    public void setFilterIntensity(final float intensity)
-    {
-        queueEvent(new Runnable()
-        {
+    public void setFilterIntensity(final float intensity) {
+        queueEvent(new Runnable() {
             @Override
-            public void run()
-            {
-                if (mFrameRecorder != null)
-                {
+            public void run() {
+                if (mFrameRecorder != null) {
                     mFrameRecorder.setFilterIntensity(intensity);
-                } else
-                {
+                } else {
                     Log.e(TAG, "setFilterIntensity after release!!");
                 }
             }
         });
     }
 
-    public void setOnCreateCallback(final OnCreateCallback callback)
-    {
+    public void setOnCreateCallback(final OnCreateCallback callback) {
 
         assert callback != null : "Invalid Operation!";
 
-        if (mFrameRecorder == null)
-        {
+        if (mFrameRecorder == null) {
             mOnCreateCallback = callback;
-        } else
-        {
-            queueEvent(new Runnable()
-            {
+        } else {
+            queueEvent(new Runnable() {
                 @Override
-                public void run()
-                {
+                public void run() {
                     callback.createOver(cameraInstance().getCameraDevice() != null);
                 }
             });
         }
     }
 
-    public void setCameraFacing(int facing)
-    {
-        if (BACK_CAMERA == facing)
-        {
+    public void setCameraFacing(int facing) {
+        if (BACK_CAMERA == facing) {
             mIsCameraBackForward = true;
         } else mIsCameraBackForward = false;
 
@@ -329,75 +285,61 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     }
 
 
-
-    public void focusAtPoint(float x, float y, Camera.AutoFocusCallback focusCallback)
-    {
+    public void focusAtPoint(float x, float y, Camera.AutoFocusCallback focusCallback) {
         cameraInstance().focusAtPoint(y, 1.0f - x, focusCallback);
     }
 
-    public void setFocusMode(String focusMode)
-    {
+    public void setFocusMode(String focusMode) {
         /*if(cameraInstance().getParams().getFocusMode().equals(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE))
             return;
 
         cameraInstance().setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);*/
+        if(cameraInstance() == null) return;
 
         Camera.Parameters mParams = cameraInstance().getParams();
         List<String> focusModes = mParams.getSupportedFocusModes();
 
-        for(String focus : focusModes)
-        {
-            Log.d(TAG, focus +  "Focus mode");
+        for (String focus : focusModes) {
+            Log.d(TAG, focus + "Focus mode");
         }
 
-        if(focusModes.contains(focusMode)){
+        if (focusModes.contains(focusMode)) {
             mParams.setFocusMode(focusMode);
         }
 
         cameraInstance().setParams(mParams);
     }
 
-    public CameraInstance cameraInstance()
-    {
+    public CameraInstance cameraInstance() {
         return CameraInstance.getInstance();
     }
 
-    public void setStorageManager(StorageManager storageManager)
-    {
+    public void setStorageManager(StorageManager storageManager) {
         this.storageManager = storageManager;
     }
 
-    public void setFrontalPhotoQuality(int frontalPhotoQuality)
-    {
+    public void setFrontalPhotoQuality(int frontalPhotoQuality) {
         this.frontalPhotoQuality = frontalPhotoQuality;
     }
 
-    public void setRearPhotoQuality(int rearPhotoQuality)
-    {
+    public void setRearPhotoQuality(int rearPhotoQuality) {
         this.rearPhotoQuality = rearPhotoQuality;
     }
 
-    public interface ReleaseOKCallback
-    {
+    public interface ReleaseOKCallback {
         void releaseOK();
     }
 
-    public interface TakePictureCallback
-    {
+    public interface TakePictureCallback {
         void takePictureOK(Bitmap bmp);
     }
 
-    public synchronized void release(final ReleaseOKCallback callback)
-    {
-        if (mFrameRecorder != null)
-        {
-            queueEvent(new Runnable()
-            {
+    public synchronized void release(final ReleaseOKCallback callback) {
+        if (mFrameRecorder != null) {
+            queueEvent(new Runnable() {
                 @Override
-                public void run()
-                {
-                    if (mFrameRecorder != null)
-                    {
+                public void run() {
+                    if (mFrameRecorder != null) {
                         mFrameRecorder.release();
                         mFrameRecorder = null;
 
@@ -417,8 +359,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
         }
     }
 
-    public interface OnCreateCallback
-    {
+    public interface OnCreateCallback {
         void createOver(boolean success);
     }
 
@@ -428,12 +369,10 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     //    Camera.Parameters.FLASH_MODE_ON;
     //    Camera.Parameters.FLASH_MODE_RED_EYE
     //    Camera.Parameters.FLASH_MODE_TORCH 等
-    public synchronized boolean setFlashLightMode(int mode)
-    {
+    public synchronized boolean setFlashLightMode(int mode) {
         String flashRequest = null;
 
-        switch (mode)
-        {
+        switch (mode) {
             case 0:
                 flashRequest = FLASH_MODE_OFF;
                 break;
@@ -445,14 +384,12 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
                 break;
         }
 
-        if (!getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
-        {
+        if (!getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
             Log.e(TAG, "No flash light is supported by current device!");
             return false;
         }
 
-        if (!mIsCameraBackForward)
-        {
+        if (!mIsCameraBackForward) {
             return false;
         }
 
@@ -461,19 +398,16 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
         if (parameters == null)
             return false;
 
-        try
-        {
+        try {
 
-            if (!parameters.getSupportedFlashModes().contains(flashRequest))
-            {
+            if (!parameters.getSupportedFlashModes().contains(flashRequest)) {
                 Log.e(TAG, "Invalid Flash Light Mode!!!");
                 return false;
             }
 
             parameters.setFlashMode(flashRequest);
             cameraInstance().setParams(parameters);
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             Log.e(TAG, "Switch flash light failed, check if you're using front camera.");
             return false;
         }
@@ -481,223 +415,200 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
         return true;
     }
 
-    public synchronized void takePicture(final CameraSurfaceView.TakePictureCallback photoCallback, Camera.ShutterCallback shutterCallback, final String config, final float intensity, final boolean isFrontMirror)
-    {
+    public synchronized void takePicture(final CameraSurfaceView.TakePictureCallback photoCallback, Camera.ShutterCallback shutterCallback, final String config, final float intensity, final boolean isFrontMirror) {
 
         Camera.Parameters params = cameraInstance().getParams();
 
-        if (photoCallback == null || params == null)
-        {
+        if (photoCallback == null || params == null) {
             Log.e(TAG, "takePicture after release!");
-            if (photoCallback != null)
-            {
+            Crashlytics.log("takePicture after release!");
+
+            if (photoCallback != null) {
                 photoCallback.takePictureOK(null);
             }
+
             return;
         }
 
-        try
-        {
+        try {
             params.setRotation(90);
             cameraInstance().setParams(params);
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             Log.e(TAG, "Error when takePicture: " + e.toString());
+            Crashlytics.logException(e);
             photoCallback.takePictureOK(null);
             return;
         }
 
-        cameraInstance().getCameraDevice().takePicture(shutterCallback, null, new Camera.PictureCallback()
-        {
-            @Override
-            public void onPictureTaken(final byte[] data, final Camera camera)
-            {
-                cameraInstance().getCameraDevice().startPreview();
+        try {
+            cameraInstance().getCameraDevice().takePicture(shutterCallback, null, new Camera.PictureCallback() {
+                @Override
+                public void onPictureTaken(final byte[] data, final Camera camera) {
+                    cameraInstance().getCameraDevice().startPreview();
 
-                new Thread(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        Camera.Parameters params = camera.getParameters();
-                        Camera.Size sz = params.getPictureSize();
-                        Log.i(TAG, "Width taken: " + sz.width + " height taken:" + sz.height);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Camera.Parameters params = camera.getParameters();
+                            Camera.Size sz = params.getPictureSize();
+                            Log.i(TAG, "Width taken: " + sz.width + " height taken:" + sz.height);
 
-                        boolean shouldRotate;
+                            boolean shouldRotate;
 
-                        Bitmap bmp;
-                        int width, height;
+                            Bitmap bmp;
+                            int width, height;
 
-                        if (sz.width != sz.height)
-                        {
-                            //默认数据格式已经设置为 JPEG
-                            bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
-                            width = bmp.getWidth();
-                            height = bmp.getHeight();
-                            shouldRotate = (sz.width > sz.height && width > height) || (sz.width < sz.height && width < height);
-                        } else
-                        {
-                            Log.i(TAG, "Cache image to get exif.");
-
-                            try
-                            {
-                                String tmpFilename = getContext().getExternalCacheDir() + "/picture_cache000.jpg";
-                                FileOutputStream fileout = new FileOutputStream(tmpFilename);
-                                BufferedOutputStream bufferOutStream = new BufferedOutputStream(fileout);
-                                bufferOutStream.write(data);
-                                bufferOutStream.flush();
-                                bufferOutStream.close();
-
-                                ExifInterface exifInterface = new ExifInterface(tmpFilename);
-                                int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-
-                                switch (orientation)
-                                {
-                                    case ExifInterface.ORIENTATION_ROTATE_90:
-                                        shouldRotate = true;
-                                        break;
-                                    default:
-                                        shouldRotate = false;
-                                        break;
-                                }
-
-                                bmp = BitmapFactory.decodeFile(tmpFilename);
+                            if (sz.width != sz.height) {
+                                //默认数据格式已经设置为 JPEG
+                                bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
                                 width = bmp.getWidth();
                                 height = bmp.getHeight();
+                                shouldRotate = (sz.width > sz.height && width > height) || (sz.width < sz.height && width < height);
+                            } else {
+                                Log.i(TAG, "Cache image to get exif.");
 
-                            } catch (IOException e)
-                            {
-                                Log.e(TAG, "Err when saving bitmap...");
-                                e.printStackTrace();
-                                return;
-                            }
-                        }
+                                try {
+                                    String tmpFilename = getContext().getExternalCacheDir() + "/picture_cache000.jpg";
+                                    FileOutputStream fileout = new FileOutputStream(tmpFilename);
+                                    BufferedOutputStream bufferOutStream = new BufferedOutputStream(fileout);
+                                    bufferOutStream.write(data);
+                                    bufferOutStream.flush();
+                                    bufferOutStream.close();
 
+                                    ExifInterface exifInterface = new ExifInterface(tmpFilename);
+                                    int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
-                        if (width > mMaxTextureSize || height > mMaxTextureSize)
-                        {
-                            float scaling = Math.max(width / (float) mMaxTextureSize, height / (float) mMaxTextureSize);
-                            Log.i(TAG, String.format("目标尺寸(%d x %d)超过当前设备OpenGL 能够处理的最大范围(%d x %d)， 现在将图片压缩至合理大小!", width, height, mMaxTextureSize, mMaxTextureSize));
+                                    switch (orientation) {
+                                        case ExifInterface.ORIENTATION_ROTATE_90:
+                                            shouldRotate = true;
+                                            break;
+                                        default:
+                                            shouldRotate = false;
+                                            break;
+                                    }
 
-                            bmp = Bitmap.createScaledBitmap(bmp, (int) (width / scaling), (int) (height / scaling), false);
+                                    bmp = BitmapFactory.decodeFile(tmpFilename);
+                                    width = bmp.getWidth();
+                                    height = bmp.getHeight();
 
-                            width = bmp.getWidth();
-                            height = bmp.getHeight();
-                        }
-
-                        Bitmap bmp2;
-
-                        if (shouldRotate)
-                        {
-                            bmp2 = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-
-                            Canvas canvas = new Canvas(bmp2);
-
-                            if (cameraInstance().getFacing() == Camera.CameraInfo.CAMERA_FACING_BACK)
-                            {
-                                Matrix mat = new Matrix();
-                                int halfLen = Math.min(width, height) / 2;
-                                mat.setRotate(90, halfLen, halfLen);
-                                canvas.drawBitmap(bmp, mat, null);
-                            } else
-                            {
-                                Matrix mat = new Matrix();
-
-                                if (isFrontMirror)
-                                {
-                                    mat.postTranslate(-width / 2, -height / 2);
-                                    mat.postScale(-1.0f, 1.0f);
-                                    mat.postTranslate(width / 2, height / 2);
-                                    int halfLen = Math.min(width, height) / 2;
-                                    mat.postRotate(90, halfLen, halfLen);
-                                } else
-                                {
-                                    int halfLen = Math.max(width, height) / 2;
-                                    mat.postRotate(-90, halfLen, halfLen);
+                                } catch (IOException e) {
+                                    Log.e(TAG, "Err when saving bitmap...");
+                                    e.printStackTrace();
+                                    return;
                                 }
-
-                                canvas.drawBitmap(bmp, mat, null);
                             }
 
-                            bmp.recycle();
-                        } else
-                        {
-                            if (cameraInstance().getFacing() == Camera.CameraInfo.CAMERA_FACING_BACK)
-                            {
-                                bmp2 = bmp;
-                            } else
-                            {
 
+                            if (width > mMaxTextureSize || height > mMaxTextureSize) {
+                                float scaling = Math.max(width / (float) mMaxTextureSize, height / (float) mMaxTextureSize);
+                                Log.i(TAG, String.format("目标尺寸(%d x %d)超过当前设备OpenGL 能够处理的最大范围(%d x %d)， 现在将图片压缩至合理大小!", width, height, mMaxTextureSize, mMaxTextureSize));
+
+                                bmp = Bitmap.createScaledBitmap(bmp, (int) (width / scaling), (int) (height / scaling), false);
+
+                                width = bmp.getWidth();
+                                height = bmp.getHeight();
+                            }
+
+                            Bitmap bmp2;
+
+                            if (shouldRotate) {
                                 bmp2 = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
                                 Canvas canvas = new Canvas(bmp2);
-                                Matrix mat = new Matrix();
-                                if (isFrontMirror)
-                                {
-                                    mat.postTranslate(-width / 2, -height / 2);
-                                    mat.postScale(1.0f, -1.0f);
-                                    mat.postTranslate(width / 2, height / 2);
-                                } else
-                                {
-                                    mat.postTranslate(-width / 2, -height / 2);
-                                    mat.postScale(-1.0f, -1.0f);
-                                    mat.postTranslate(width / 2, height / 2);
+
+                                if (cameraInstance().getFacing() == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                                    Matrix mat = new Matrix();
+                                    int halfLen = Math.min(width, height) / 2;
+                                    mat.setRotate(90, halfLen, halfLen);
+                                    canvas.drawBitmap(bmp, mat, null);
+                                } else {
+                                    Matrix mat = new Matrix();
+
+                                    if (isFrontMirror) {
+                                        mat.postTranslate(-width / 2, -height / 2);
+                                        mat.postScale(-1.0f, 1.0f);
+                                        mat.postTranslate(width / 2, height / 2);
+                                        int halfLen = Math.min(width, height) / 2;
+                                        mat.postRotate(90, halfLen, halfLen);
+                                    } else {
+                                        int halfLen = Math.max(width, height) / 2;
+                                        mat.postRotate(-90, halfLen, halfLen);
+                                    }
+
+                                    canvas.drawBitmap(bmp, mat, null);
                                 }
 
-                                canvas.drawBitmap(bmp, mat, null);
+                                bmp.recycle();
+                            } else {
+                                if (cameraInstance().getFacing() == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                                    bmp2 = bmp;
+                                } else {
+
+                                    bmp2 = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                                    Canvas canvas = new Canvas(bmp2);
+                                    Matrix mat = new Matrix();
+                                    if (isFrontMirror) {
+                                        mat.postTranslate(-width / 2, -height / 2);
+                                        mat.postScale(1.0f, -1.0f);
+                                        mat.postTranslate(width / 2, height / 2);
+                                    } else {
+                                        mat.postTranslate(-width / 2, -height / 2);
+                                        mat.postScale(-1.0f, -1.0f);
+                                        mat.postTranslate(width / 2, height / 2);
+                                    }
+
+                                    canvas.drawBitmap(bmp, mat, null);
+                                }
+
                             }
 
+                            if (config != null) {
+                                CGENativeLibrary.filterImage_MultipleEffectsWriteBack(bmp2, config, intensity);
+                            }
+
+                            photoCallback.takePictureOK(bmp2);
                         }
+                    }).start();
 
-                        if (config != null)
-                        {
-                            CGENativeLibrary.filterImage_MultipleEffectsWriteBack(bmp2, config, intensity);
-                        }
-
-                        photoCallback.takePictureOK(bmp2);
-                    }
-                }).start();
-
-            }
-        });
+                }
+            });
+        } catch (Exception ex) {
+            Crashlytics.logException(ex);
+            ex.printStackTrace();
+        }
     }
 
-    public synchronized void takeShot(final CameraSurfaceView.TakePictureCallback callback, final boolean noMask)
-    {
+    public synchronized void takeShot(final CameraSurfaceView.TakePictureCallback callback, final boolean noMask) {
         assert callback != null : "callback must not be null!";
 
-        if (mFrameRecorder == null)
-        {
+        if (mFrameRecorder == null) {
             Log.e(TAG, "Recorder not initialized!");
             callback.takePictureOK(null);
             return;
         }
 
-        queueEvent(new Runnable()
-        {
+        queueEvent(new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
 
                 FrameBufferObject frameBufferObject = new FrameBufferObject();
                 int bufferTexID;
                 IntBuffer buffer;
                 Bitmap bmp;
 
-                if (noMask || !mIsUsingMask)
-                {
+                if (noMask || !mIsUsingMask) {
 
-                    bufferTexID = Common.genBlankTextureID(mRecordWidth/2, mRecordHeight/2);
+                    bufferTexID = Common.genBlankTextureID(mRecordWidth / 2, mRecordHeight / 2);
                     frameBufferObject.bindTexture(bufferTexID);
-                    GLES20.glViewport(0, 0, mRecordWidth/2, mRecordHeight/2);
+                    GLES20.glViewport(0, 0, mRecordWidth / 2, mRecordHeight / 2);
                     mFrameRecorder.drawCache();
-                    buffer = IntBuffer.allocate(mRecordWidth * mRecordHeight/4);
-                    GLES20.glReadPixels(0, 0, mRecordWidth/2, mRecordHeight/2, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer);
-                    bmp = Bitmap.createBitmap(mRecordWidth/2, mRecordHeight/2, Bitmap.Config.ARGB_8888);
+                    buffer = IntBuffer.allocate(mRecordWidth * mRecordHeight / 4);
+                    GLES20.glReadPixels(0, 0, mRecordWidth / 2, mRecordHeight / 2, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer);
+                    bmp = Bitmap.createBitmap(mRecordWidth / 2, mRecordHeight / 2, Bitmap.Config.ARGB_8888);
                     bmp.copyPixelsFromBuffer(buffer);
-                    Log.i(TAG, String.format("w: %d, h: %d", mRecordWidth/2, mRecordHeight/2));
+                    Log.i(TAG, String.format("w: %d, h: %d", mRecordWidth / 2, mRecordHeight / 2));
 
-                } else
-                {
+                } else {
 
                     bufferTexID = Common.genBlankTextureID(mDrawViewport.width, mDrawViewport.height);
                     frameBufferObject.bindTexture(bufferTexID);
@@ -727,8 +638,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
     }
 
-    private void adaptViewPort()
-    {
+    private void adaptViewPort() {
         float scaling;
         scaling = mRecordWidth / (float) mRecordHeight;
 
@@ -738,12 +648,10 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
         int w, h;
 
-        if (s > 1.0)
-        {
+        if (s > 1.0) {
             w = (int) (mViewHeight * scaling);
             h = mViewHeight;
-        } else
-        {
+        } else {
             w = mViewWidth;
             h = (int) (mViewWidth / scaling);
         }
@@ -754,35 +662,31 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
         mDrawViewport.y = (mViewHeight - mDrawViewport.height) / 2;
 
     }
-    private Camera.Size getMiddlePictureSize(Camera.Parameters parameters)
-    {
+
+    private Camera.Size getMiddlePictureSize(Camera.Parameters parameters) {
         List<Camera.Size> sizes = parameters.getSupportedPictureSizes();
 
-        Collections.sort(sizes, new Comparator<Camera.Size>()
-        {
+        Collections.sort(sizes, new Comparator<Camera.Size>() {
             @Override
-            public int compare(Camera.Size size1, Camera.Size size2)
-            {
-                return size1.height*size1.width - size2.height*size2.width;
+            public int compare(Camera.Size size1, Camera.Size size2) {
+                return size1.height * size1.width - size2.height * size2.width;
             }
         });
 
-        return sizes.get((int) Math.ceil(sizes.size()/2));
+        return sizes.get((int) Math.ceil(sizes.size() / 2));
     }
-    private Camera.Size getBestPictureSize(Camera.Parameters parameters)
-    {
+
+    private Camera.Size getBestPictureSize(Camera.Parameters parameters) {
         int max = 0;
         int index = 0;
 
         List<Camera.Size> sizes = parameters.getSupportedPictureSizes();
 
-        for (int i = 0; i < sizes.size(); i++)
-        {
+        for (int i = 0; i < sizes.size(); i++) {
             Camera.Size s = sizes.get(i);
 
             int size = s.height * s.width;
-            if (size > max)
-            {
+            if (size > max) {
                 index = i;
                 max = size;
             }
@@ -791,35 +695,29 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
         return sizes.get(index);
     }
 
-    private Camera.Size getLowPictureSize(Camera.Parameters parameters)
-    {
+    private Camera.Size getLowPictureSize(Camera.Parameters parameters) {
         List<Camera.Size> sizes = parameters.getSupportedPictureSizes();
 
-        Collections.sort(sizes, new Comparator<Camera.Size>()
-        {
+        Collections.sort(sizes, new Comparator<Camera.Size>() {
             @Override
-            public int compare(Camera.Size size1, Camera.Size size2)
-            {
-                return size1.height*size1.width - size2.height*size2.width;
+            public int compare(Camera.Size size1, Camera.Size size2) {
+                return size1.height * size1.width - size2.height * size2.width;
             }
         });
 
-        return sizes.get((int) Math.ceil(sizes.size()/4));
+        return sizes.get((int) Math.ceil(sizes.size() / 4));
     }
 
-    private Camera.Size getBestPreviewSize(Camera.Parameters parameters)
-    {
+    private Camera.Size getBestPreviewSize(Camera.Parameters parameters) {
         int max = 0;
         int index = 0;
 
         List<Camera.Size> sizes = parameters.getSupportedPreviewSizes();
 
-        Collections.sort(sizes, new Comparator<Camera.Size>()
-        {
+        Collections.sort(sizes, new Comparator<Camera.Size>() {
             @Override
-            public int compare(Camera.Size size1, Camera.Size size2)
-            {
-                return size1.height*size1.width - size2.height*size2.width;
+            public int compare(Camera.Size size1, Camera.Size size2) {
+                return size1.height * size1.width - size2.height * size2.width;
             }
         });
 
@@ -835,6 +733,6 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
             }
         }*/
 
-        return sizes.get((int) Math.floor(sizes.size()/2));
+        return sizes.get((int) Math.floor(sizes.size() / 2));
     }
 }

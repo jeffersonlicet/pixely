@@ -27,6 +27,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -35,6 +36,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.request.RequestOptions;
 import com.crashlytics.android.Crashlytics;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.yarolegovich.discretescrollview.DiscreteScrollView;
 import com.yarolegovich.discretescrollview.Orientation;
 import com.yarolegovich.discretescrollview.transform.ScaleTransformer;
@@ -88,6 +90,7 @@ public class CameraActivity extends BaseActivity {
     private float filterIntensity = 1;
     private String filterConfig = "";
     private int selectedIndex;
+    private int nFocusIntents;
 
     private boolean canTakePicture;
     private boolean isFilteringEnabled;
@@ -114,6 +117,9 @@ public class CameraActivity extends BaseActivity {
     private FocusMarkerLayout focusMarkerLayout;
     private StorageManager storageManager;
     private StorageManager privateStorageManager;
+
+    @BindView(R.id.focusFailedContainer)
+    FrameLayout focusFailedContainer;
 
     @BindView(R.id.surfaceView)
     CameraView surfaceView;
@@ -276,6 +282,7 @@ public class CameraActivity extends BaseActivity {
                     camera_shutter_outside.startAnimation(rotate);
 
                 } catch (Exception ex) {
+                    Crashlytics.logException(ex);
                     ex.printStackTrace();
                 }
             }
@@ -388,13 +395,39 @@ public class CameraActivity extends BaseActivity {
                             internalTakePicture();
                         } else {
                             Log.d(TAG, "Error focusing");
+                            if(nFocusIntents < 2) {
+                                nFocusIntents++;
+                                takePicture();
+                            } else {
+                                nFocusIntents = 0;
 
-                            takePicture();
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        camera_shutter_outside.clearAnimation();
+                                        camera_shutter_outside.setImageDrawable(getResources().getDrawable(R.drawable.camera_shutter_outside));
+                                        camera_shutter_outside.setRotation(0);
+
+                                        focusFailedContainer.setVisibility(View.VISIBLE);
+
+                                        new Handler().postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                focusFailedContainer.setVisibility(View.GONE);
+                                            }
+                                        }, 1000);
+
+                                    }
+                                });
+
+                            }
+
                         }
                     }
                 });
             } catch (Exception ex) {
                 ex.printStackTrace();
+                Crashlytics.logException(ex);
             }
         } else internalTakePicture();
 
@@ -407,6 +440,11 @@ public class CameraActivity extends BaseActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
+
+                Bundle params = new Bundle();
+                params.putInt("filterId", selectedIndex);
+                params.putFloat("filterIntensity", filterIntensity);
+                FirebaseAnalytics.getInstance(mActivity).logEvent("pictureTaken", params);
 
                 final long startTime2 = System.currentTimeMillis();
 
@@ -620,8 +658,6 @@ public class CameraActivity extends BaseActivity {
     public void onResume() {
         super.onResume();
         surfaceView.onResume();
-
-
     }
 
     private void performSwipeRight() {
@@ -638,8 +674,7 @@ public class CameraActivity extends BaseActivity {
     }
 
     private void performSwipeTop() {
-        //startActivity(new Intent(this, SettingsActivity.class));
-        // finish();
+
     }
 
     private void performSwipeBottom() {

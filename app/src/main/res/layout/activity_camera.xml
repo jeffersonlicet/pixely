@@ -212,5 +212,26 @@
             android:layout_height="match_parent" />
     </RelativeLayout>
 
+    <FrameLayout
+        android:id="@+id/focusFailedContainer"
+        android:layout_width="55dp"
+        android:visibility="gone"
+        android:layout_centerInParent="true"
+        android:layout_height="55dp">
+
+        <ImageView
+            android:id="@+id/fill"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0.8"
+            android:src="@drawable/focus_marker_failed_fill" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/focus_marker_outline" />
+
+    </FrameLayout>
+
 
 </RelativeLayout>

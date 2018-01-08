@@ -24,6 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.FutureTarget;
@@ -51,8 +52,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class EditorActivity extends BaseActivity
-{
+public class EditorActivity extends BaseActivity {
     private static final String TAG = EditorActivity.class.getSimpleName();
 
     private int seekBarWait = 5000;
@@ -96,10 +96,8 @@ public class EditorActivity extends BaseActivity
     ImageView camera_shutter_outside;
 
     @OnClick({R.id.actionApply, R.id.actionCancel})
-    public void onClickManager(View view)
-    {
-        switch (view.getId())
-        {
+    public void onClickManager(View view) {
+        switch (view.getId()) {
             case R.id.actionApply:
                 performSave();
                 break;
@@ -110,7 +108,7 @@ public class EditorActivity extends BaseActivity
     }
 
     private void performSave() {
-        if(saving) return;
+        if (saving) return;
 
         saving = true;
 
@@ -134,8 +132,7 @@ public class EditorActivity extends BaseActivity
 
                 int size = 0;
 
-                switch (quality)
-                {
+                switch (quality) {
                     case 0:
                         size = 600;
                         break;
@@ -148,29 +145,28 @@ public class EditorActivity extends BaseActivity
                 }
 
                 final FutureTarget<Bitmap> futureTarget =
-                        Glide.with(getApplication())
-                                .asBitmap()
-                                .load(new File(photoUri))
-                                .submit(size, size);
+                    Glide.with(getApplication())
+                        .asBitmap()
+                        .load(new File(photoUri))
+                        .submit(size, size);
 
-                 try {
+                try {
 
-                            surfaceView.setImageBitmap(futureTarget.get());
+                    surfaceView.setImageBitmap(futureTarget.get());
 
-                            if(selectedIndex != 0)
-                            {
-                                imageProcessor.setFilter(selectedIndex, filterIntensity, new FilterProcessor.FilteringCallback() {
-                                    @Override
-                                    public void filterChanged() {
-                                        getAndSaveBitmap();
-                                    }
-                                });
-                            } else getAndSaveBitmap();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        } catch (ExecutionException e) {
-                            e.printStackTrace();
-                        }
+                    if (selectedIndex != 0) {
+                        imageProcessor.setFilter(selectedIndex, filterIntensity, new FilterProcessor.FilteringCallback() {
+                            @Override
+                            public void filterChanged() {
+                                getAndSaveBitmap();
+                            }
+                        });
+                    } else getAndSaveBitmap();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }
 
             }
         }).start();
@@ -178,14 +174,13 @@ public class EditorActivity extends BaseActivity
 
     }
 
-    private void getAndSaveBitmap()
-    {
+    private void getAndSaveBitmap() {
         surfaceView.getResultBitmap(new ImageGLSurfaceView.QueryResultBitmapCallback() {
             @Override
             public void get(final Bitmap bmp) {
 
                 @SuppressLint("SimpleDateFormat") String timeStamp =
-                        new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                    new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
                 final String name = File.separator + "IMG_" + timeStamp + ".jpg";
                 storageManager.createFile(name, bmp);
                 bmp.recycle();
@@ -195,16 +190,14 @@ public class EditorActivity extends BaseActivity
                     public void run() {
 
                         MediaScannerConnection.scanFile(getApplicationContext(),
-                                new String[]{storageManager.getFile(name).getPath()}, null,
-                                new MediaScannerConnection.OnScanCompletedListener()
-                                {
-                                    @Override
-                                    public void onScanCompleted(String path, Uri uri)
-                                    {
-                                        Log.i(TAG, "Scanned " + path);
-                                    }
-                                });
-
+                            new String[]{storageManager.getFile(name).getPath()}, null,
+                            new MediaScannerConnection.OnScanCompletedListener() {
+                                @Override
+                                public void onScanCompleted(String path, Uri uri) {
+                                    Log.i(TAG, "Scanned " + path);
+                                }
+                            });
+                        Toast.makeText(getApplicationContext(), "Saved to Pixely album", Toast.LENGTH_SHORT).show();
                         Intent newActivity = new Intent(getApplicationContext(), PhotoActivity.class);
                         newActivity.putExtra("photoUri", storageManager.getFile(name).getAbsolutePath());
                         startActivity(newActivity);
@@ -215,16 +208,12 @@ public class EditorActivity extends BaseActivity
         });
     }
 
-    private Runnable runHideSeek = new Runnable()
-    {
+    private Runnable runHideSeek = new Runnable() {
         @Override
-        public void run()
-        {
-            intensityIndicator.animate().setStartDelay(0).alpha(0).setDuration(500).setListener(new AnimatorListenerAdapter()
-            {
+        public void run() {
+            intensityIndicator.animate().setStartDelay(0).alpha(0).setDuration(500).setListener(new AnimatorListenerAdapter() {
                 @Override
-                public void onAnimationEnd(Animator animation)
-                {
+                public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
                     intensityIndicator.setVisibility(View.GONE);
                 }
@@ -233,41 +222,34 @@ public class EditorActivity extends BaseActivity
     };
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        try
-        {
+        try {
             Window window = getWindow();
             window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
             requestWindowFeature(Window.FEATURE_NO_TITLE);
-        } catch (Exception ex)
-        {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
 
         setContentView(R.layout.activity_editor);
         ButterKnife.bind(this);
 
-        try
-        {
+        try {
             storageManager = new StorageManager(this, true);
             imageProcessor = new ImageProcessor(this, surfaceView);
             imageProcessor.initLibrary();
             filters = imageProcessor.getFilters();
 
-        } catch (Exception ex)
-        {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         photoUri = getIntent().getStringExtra("photoUri");
 
-        filtersAdapter = new FilterListAdapter(this, imageProcessor.getFilters(), filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener()
-        {
+        filtersAdapter = new FilterListAdapter(this, imageProcessor.getFilters(), filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener() {
             @Override
-            public void onClickSelectedItemListener(int selected)
-            {
+            public void onClickSelectedItemListener(int selected) {
                 /*Log.d(TAG, "Clicked selected");
                 progressWorkingIndicator.setVisibility(View.VISIBLE);
 
@@ -297,37 +279,31 @@ public class EditorActivity extends BaseActivity
         filterSelector.setItemTransitionTimeMillis(80);
 
         filterSelector.setItemTransformer(new ScaleTransformer.Builder()
-                .setMaxScale(1.00f)
-                .setMinScale(0.80f)
-                .build());
+            .setMaxScale(1.00f)
+            .setMinScale(0.80f)
+            .build());
 
-        filterSelector.post(new Runnable()
-        {
+        filterSelector.post(new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
                 filterSelector.smoothScrollToPosition(0);
             }
         });
         filterSelector.addOnItemChangedListener(new onFilterChangedListener());
 
-        intensityIndicator.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
-        {
+        intensityIndicator.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b)
-            {
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 restartHideSeekBar();
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar)
-            {
+            public void onStartTrackingTouch(SeekBar seekBar) {
                 restartHideSeekBar();
             }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar)
-            {
+            public void onStopTrackingTouch(SeekBar seekBar) {
                 if (!isFilteringEnabled) return;
 
                 final float value = seekBar.getProgress() / 100f;
@@ -335,17 +311,14 @@ public class EditorActivity extends BaseActivity
                 filterIntensity = value;
                 progressWorkingIndicator.setVisibility(View.VISIBLE);
 
-                if (!filterConfig.isEmpty())
-                {
+                if (!filterConfig.isEmpty()) {
                     imageProcessor.setIntensity(value, new FilterProcessor.IntensityCallback() {
                         @Override
                         public void onIntensityChanged() {
 
-                            runOnUiThread(new Runnable()
-                            {
+                            runOnUiThread(new Runnable() {
                                 @Override
-                                public void run()
-                                {
+                                public void run() {
                                     progressWorkingIndicator.setVisibility(View.GONE);
                                 }
                             });
@@ -357,31 +330,25 @@ public class EditorActivity extends BaseActivity
             }
         });
 
-        try
-        {
+        try {
 
             final FutureTarget<Bitmap> futureTarget =
-                    Glide.with(this)
-                            .asBitmap()
-                            .load(new File(photoUri))
-                            .submit(500, 500);
+                Glide.with(this)
+                    .asBitmap()
+                    .load(new File(photoUri))
+                    .submit(500, 500);
 
             surfaceView.setDisplayMode(ImageGLSurfaceView.DisplayMode.DISPLAY_ASPECT_FIT);
-            surfaceView.setOnClickListener(new View.OnClickListener()
-            {
+            surfaceView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View view)
-                {
-                    if(saving) return;
+                public void onClick(View view) {
+                    if (saving) return;
 
-                    if (!filterConfig.isEmpty())
-                    {
+                    if (!filterConfig.isEmpty()) {
                         intensityIndicator.setVisibility(View.VISIBLE);
-                        intensityIndicator.animate().alpha(1).setDuration(300).setListener(new AnimatorListenerAdapter()
-                        {
+                        intensityIndicator.animate().alpha(1).setDuration(300).setListener(new AnimatorListenerAdapter() {
                             @Override
-                            public void onAnimationEnd(Animator animation)
-                            {
+                            public void onAnimationEnd(Animator animation) {
                                 restartHideSeekBar();
                                 super.onAnimationEnd(animation);
                             }
@@ -393,21 +360,16 @@ public class EditorActivity extends BaseActivity
                 }
             });
 
-            surfaceView.setSurfaceCreatedCallback(new ImageGLSurfaceView.OnSurfaceCreatedCallback()
-            {
+            surfaceView.setSurfaceCreatedCallback(new ImageGLSurfaceView.OnSurfaceCreatedCallback() {
                 @Override
-                public void surfaceCreated()
-                {
-                    try
-                    {
+                public void surfaceCreated() {
+                    try {
                         surfaceView.setImageBitmap(futureTarget.get());
                         surfaceView.setFilterWithConfig("");
 
-                        runOnUiThread(new Runnable()
-                        {
+                        runOnUiThread(new Runnable() {
                             @Override
-                            public void run()
-                            {
+                            public void run() {
                                 progressWorkingIndicator.setVisibility(View.GONE);
 
                             }
@@ -415,32 +377,26 @@ public class EditorActivity extends BaseActivity
 
                         isFilteringEnabled = true;
 
-                    } catch (InterruptedException e)
-                    {
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
-                    } catch (ExecutionException e)
-                    {
+                    } catch (ExecutionException e) {
                         e.printStackTrace();
                     }
                 }
             });
-        } catch (Exception ex)
-        {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    private void restartHideSeekBar()
-    {
+    private void restartHideSeekBar() {
         hideSeekBarHandler.removeCallbacks(runHideSeek);
         hideSeekBarHandler.postDelayed(runHideSeek, seekBarWait);
     }
 
-    private class onFilterChangedListener implements DiscreteScrollView.OnItemChangedListener<RecyclerView.ViewHolder>
-    {
+    private class onFilterChangedListener implements DiscreteScrollView.OnItemChangedListener<RecyclerView.ViewHolder> {
         @Override
-        public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder, int adapterPosition)
-        {
+        public void onCurrentItemChanged(@Nullable RecyclerView.ViewHolder viewHolder, int adapterPosition) {
             if (!isFilteringEnabled) return;
 
             final FilterItem filter = filters.get(adapterPosition);
@@ -459,7 +415,7 @@ public class EditorActivity extends BaseActivity
                 }
             });
 
-             intensityIndicator.setProgress((int) (filter.getIntensity() * 100f));
+            intensityIndicator.setProgress((int) (filter.getIntensity() * 100f));
 
             filterConfig = filter.getParams();
             filterIntensity = filter.getIntensity();
@@ -470,17 +426,13 @@ public class EditorActivity extends BaseActivity
 
             filterIndicator.setVisibility(View.VISIBLE);
             filterIndicator.animate().setListener(null).cancel();
-            filterIndicator.animate().setStartDelay(0).setDuration(350).alpha(1).scaleX(1).scaleY(1).setListener(new AnimatorListenerAdapter()
-            {
+            filterIndicator.animate().setStartDelay(0).setDuration(350).alpha(1).scaleX(1).scaleY(1).setListener(new AnimatorListenerAdapter() {
                 @Override
-                public void onAnimationEnd(Animator animation)
-                {
+                public void onAnimationEnd(Animator animation) {
                     super.onAnimationEnd(animation);
-                    filterIndicator.animate().setStartDelay(1500).alpha(0f).scaleX(0f).scaleY(0f).setDuration(200).setListener(new AnimatorListenerAdapter()
-                    {
+                    filterIndicator.animate().setStartDelay(1500).alpha(0f).scaleX(0f).scaleY(0f).setDuration(200).setListener(new AnimatorListenerAdapter() {
                         @Override
-                        public void onAnimationEnd(Animator animation)
-                        {
+                        public void onAnimationEnd(Animator animation) {
                             super.onAnimationEnd(animation);
                             filterIndicator.setVisibility(View.GONE);
                         }
