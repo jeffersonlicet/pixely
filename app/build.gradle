@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
+apply plugin: 'com.google.gms.oss.licenses.plugin'
 
 android {
     compileSdkVersion 27
@@ -7,8 +8,8 @@ android {
         applicationId "com.sparkly.pixely"
         minSdkVersion 15
         targetSdkVersion 27
-        versionCode 5
-        versionName "1.0.4"
+        versionCode 6
+        versionName "1.0.5"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -54,6 +55,8 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.4.0'
     compile 'com.github.chrisbanes:PhotoView:2.1.3'
     implementation 'com.afollestad.material-dialogs:core:0.9.6.0'
+    implementation 'com.google.android.gms:play-services-oss-licenses:11.8.0'
+
 }
 
 apply plugin: 'com.google.gms.google-services'

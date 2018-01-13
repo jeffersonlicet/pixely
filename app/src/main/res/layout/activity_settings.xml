@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:padding="12dp"
             android:textColor="@color/colorAccent"
-            android:text="PHOTO QUALITY"
+            android:text="@string/photo_quality"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textAllCaps="true" />
@@ -25,21 +25,22 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="12dp"
-            android:text="Rear-Facing Image quality:"
+            android:text="@string/rear_image_quality"
             android:textAllCaps="true" />
 
         <RadioGroup
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingLeft="12dp">
+            android:paddingLeft="12dp"
+            android:paddingStart="12dp">
 
         <RadioButton
             android:id="@+id/rearSmallImage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="Small"
+            android:text="@string/small"
             android:textAllCaps="true" />
 
         <RadioButton
@@ -49,7 +50,7 @@
             android:layout_marginLeft="12dp"
             android:layout_marginStart="12dp"
             android:checked="false"
-            android:text="Medium"
+            android:text="@string/medium"
             android:textAllCaps="true" />
 
         <RadioButton
@@ -59,14 +60,14 @@
             android:layout_marginLeft="12dp"
             android:layout_marginStart="12dp"
             android:checked="false"
-            android:text="Best"
+            android:text="@string/big"
             android:textAllCaps="true" />
         </RadioGroup>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="12dp"
-            android:text="Frontal Image quality:"
+            android:text="@string/frontal_image_quality"
             android:textAllCaps="true" />
 
         <RadioGroup
@@ -80,7 +81,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="Small"
+                android:text="@string/small"
                 android:textAllCaps="true" />
 
             <RadioButton
@@ -90,7 +91,7 @@
                 android:layout_marginLeft="12dp"
                 android:layout_marginStart="12dp"
                 android:checked="false"
-                android:text="Medium"
+                android:text="@string/medium"
                 android:textAllCaps="true" />
 
             <RadioButton
@@ -100,9 +101,16 @@
                 android:layout_marginLeft="12dp"
                 android:layout_marginStart="12dp"
                 android:checked="false"
-                android:text="Best"
+                android:text="@string/big"
                 android:textAllCaps="true" />
         </RadioGroup>
+
+        <android.support.v7.widget.AppCompatButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/open_source"
+            android:layout_margin="6dp"
+            android:id="@+id/openSourceButton"/>
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

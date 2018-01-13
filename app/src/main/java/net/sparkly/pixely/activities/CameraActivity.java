@@ -257,14 +257,6 @@ public class CameraActivity extends BaseActivity {
             }
         });
 
-        /*modeSelector.post(new Runnable() {
-            @Override
-            public void run() {
-                //modeSelector.smoothScrollToPosition(1);
-            }
-        });*/
-
-
         filtersAdapter = new FilterListAdapter(this, filters, filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener() {
             @Override
             public void onClickSelectedItemListener(int selected) {

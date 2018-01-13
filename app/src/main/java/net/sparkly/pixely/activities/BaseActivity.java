@@ -1,20 +1,16 @@
 package net.sparkly.pixely.activities;
 
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import net.sparkly.pixely.helpers.Constants;
 import net.sparkly.pixely.utils.PreferenceManager;
 
 
-public class BaseActivity extends AppCompatActivity implements PreferenceManager
-{
+public class BaseActivity extends AppCompatActivity implements PreferenceManager {
     private static String TAG = "BaseActivity";
 
-    /**
-     * Helper to get resource strings
-     */
     public String _Resource(String name) {
         try {
             int resId = getResources().getIdentifier(name, "string", getPackageName());
@@ -30,16 +26,12 @@ public class BaseActivity extends AppCompatActivity implements PreferenceManager
 
     }
 
-    /**
-     * SharedPreferences interface
-     */
     @Override
     public SharedPreferences getPreferences() {
         try {
             return getSharedPreferences(Constants.session_preferences, MODE_PRIVATE);
         } catch (Exception e) {
-            if(e.getMessage() != null)
-                Log.d(TAG, e.getMessage());
+            e.printStackTrace();
         }
 
         return null;
@@ -50,8 +42,7 @@ public class BaseActivity extends AppCompatActivity implements PreferenceManager
         try {
             return getPreferences().edit();
         } catch (Exception e) {
-            if(e.getMessage() != null)
-                Log.d(TAG, e.getMessage());
+            e.printStackTrace();
         }
 
         return null;
@@ -62,8 +53,7 @@ public class BaseActivity extends AppCompatActivity implements PreferenceManager
         try {
             editPreferences().putString(key, value).commit();
         } catch (Exception e) {
-            if(e.getMessage() != null)
-                Log.d(TAG, e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -72,8 +62,7 @@ public class BaseActivity extends AppCompatActivity implements PreferenceManager
         try {
             return getPreferences().getString(key, "");
         } catch (Exception e) {
-            if(e.getMessage() != null)
-                Log.d(TAG, e.getMessage());
+            e.printStackTrace();
         }
 
         return "";
@@ -84,8 +73,7 @@ public class BaseActivity extends AppCompatActivity implements PreferenceManager
         try {
             editPreferences().putBoolean(key, value).commit();
         } catch (Exception e) {
-            if(e.getMessage() != null)
-                Log.d(TAG, e.getMessage());
+            e.printStackTrace();
         }
 
     }
@@ -95,8 +83,7 @@ public class BaseActivity extends AppCompatActivity implements PreferenceManager
         try {
             return getPreferences().getBoolean(key, false);
         } catch (Exception e) {
-            if(e.getMessage() != null)
-                Log.d(TAG, e.getMessage());
+            e.printStackTrace();
         }
 
         return false;
@@ -107,8 +94,7 @@ public class BaseActivity extends AppCompatActivity implements PreferenceManager
         try {
             editPreferences().putInt(key, value).commit();
         } catch (Exception e) {
-            if(e.getMessage() != null)
-                Log.d(TAG, e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -117,8 +103,7 @@ public class BaseActivity extends AppCompatActivity implements PreferenceManager
         try {
             return getPreferences().getInt(key, 0);
         } catch (Exception e) {
-            if(e.getMessage() != null)
-                Log.d(TAG, e.getMessage());
+            e.printStackTrace();
         }
 
         return 0;
@@ -129,8 +114,7 @@ public class BaseActivity extends AppCompatActivity implements PreferenceManager
         try {
             editPreferences().putFloat(key, value).commit();
         } catch (Exception e) {
-            if(e.getMessage() != null)
-                Log.d(TAG, e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -139,8 +123,7 @@ public class BaseActivity extends AppCompatActivity implements PreferenceManager
         try {
             return getPreferences().getFloat(key, 0);
         } catch (Exception e) {
-            if(e.getMessage() != null)
-                Log.d(TAG, e.getMessage());
+            e.printStackTrace();
         }
 
         return 0;

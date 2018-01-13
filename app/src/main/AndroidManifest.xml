@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -13,20 +14,27 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="net.sparkly.pixely.activities.CameraActivity"
+            android:name=".activities.CameraActivity"
             android:screenOrientation="portrait" />
-
-        <activity android:name="net.sparkly.pixely.activities.SettingsActivity" />
-        <activity android:name="net.sparkly.pixely.activities.GalleryActivity" />
-        <activity android:name="net.sparkly.pixely.activities.EditorActivity" />
-        <activity android:name="net.sparkly.pixely.activities.PhotoActivity" />
-        <activity android:name="net.sparkly.pixely.activities.SplashActivity">
+        <activity android:name=".activities.SettingsActivity" />
+        <activity android:name=".activities.GalleryActivity" />
+        <activity android:name=".activities.EditorActivity" />
+        <activity android:name=".activities.PhotoActivity" />
+        <activity android:name=".activities.SplashActivity">
             <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN" />
 
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
+
+        <activity
+            android:name="com.google.android.gms.oss.licenses.OssLicensesActivity"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
     </application>
 
 </manifest>

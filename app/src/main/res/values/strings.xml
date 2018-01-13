@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name" translatable="false">Pixely</string>
+    <string name="photo_quality">Photo quality</string>
+    <string name="rear_image_quality">Rear-Facing Image quality:</string>
+    <string name="frontal_image_quality">Frontal-Facing Image quality:</string>
+    <string name="small">Small</string>
+    <string name="medium">Medium</string>
+    <string name="big">Big</string>
+    <string name="open_source" translatable="false">Open source</string>
 </resources>

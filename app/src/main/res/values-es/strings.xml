@@ -1,0 +1,8 @@
+<resources>
+    <string name="photo_quality">Calidad de la foto</string>
+    <string name="rear_image_quality">Calidad de la cámara trasera:</string>
+    <string name="frontal_image_quality">Calidad de la cámara frontal:</string>
+    <string name="small">Pequeña</string>
+    <string name="medium">Mediana</string>
+    <string name="big">Grande</string>
+</resources>

@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 
 import net.sparkly.pixely.R;
 import net.sparkly.pixely.adapters.LocalMasonryGrid;
@@ -25,22 +24,19 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class GalleryActivity extends AppCompatActivity implements
-        LoaderManager.LoaderCallbacks<Cursor>
-{
-    private boolean hasLoaded;
+public class GalleryActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     private LocalMasonryGrid mAdapter;
     private List<String> mPhotos = new ArrayList<>();
+
+    private int nPage = 0;
+    private boolean hasLoaded;
+    private final static int nItems = 30;
 
     @BindView(R.id.mRecycler)
     RecyclerView mRecycler;
 
-    private int nPage = 0;
-    private int nItems = 30;
-
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
         ButterKnife.bind(this);
@@ -53,13 +49,9 @@ public class GalleryActivity extends AppCompatActivity implements
         mRecycler.setItemAnimator(new DefaultItemAnimator());
         mRecycler.setHasFixedSize(false);
 
-        mRecycler.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager)
-        {
+        mRecycler.addOnScrollListener(new EndlessRecyclerViewScrollListener(layoutManager) {
             @Override
-            public void onLoadMore(int page, int totalItemsCount)
-            {
-                Log.d("Gallery", "trying to load more");
-
+            public void onLoadMore(int page, int totalItemsCount) {
                 if (nPage > 5 || !hasLoaded)
                     return;
 
@@ -69,35 +61,29 @@ public class GalleryActivity extends AppCompatActivity implements
             }
         });
 
-        if (!hasLoaded)
-        {
+        if (!hasLoaded) {
             hasLoaded = true;
             fetchMedia();
         }
 
     }
 
-    private void fetchMedia()
-    {
-        Log.d("Gallery", "Calling loader");
-        //getSupportLoaderManager().initLoader(1, null, this);
+    private void fetchMedia() {
         getSupportLoaderManager().restartLoader(1, null, this);
     }
 
     @Override
-    public void onBackPressed()
-    {
+    public void onBackPressed() {
         startActivity(new Intent(this, CameraActivity.class));
         finish();
     }
 
     @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args)
-    {
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         final String[] projection = {
-                MediaStore.Files.FileColumns.DATA,
-                MediaStore.Files.FileColumns.DATE_ADDED,
-                MediaStore.Files.FileColumns.MEDIA_TYPE
+            MediaStore.Files.FileColumns.DATA,
+            MediaStore.Files.FileColumns.DATE_ADDED,
+            MediaStore.Files.FileColumns.MEDIA_TYPE
         };
 
         final String selection = MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
@@ -109,22 +95,16 @@ public class GalleryActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor)
-    {
-        while (cursor.moveToNext())
-        {
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        while (cursor != null && cursor.moveToNext()) {
             int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             final String imagePath = cursor.getString(columnIndex);
             File file = new File(imagePath);
 
-            if (file.exists())
-            {
-
-                mRecycler.post(new Runnable()
-                {
+            if (file.exists()) {
+                mRecycler.post(new Runnable() {
                     @Override
-                    public void run()
-                    {
+                    public void run() {
                         mPhotos.add(imagePath);
                         mAdapter.notifyItemInserted(mPhotos.size() - 1);
                     }
@@ -134,10 +114,8 @@ public class GalleryActivity extends AppCompatActivity implements
         }
     }
 
-
     @Override
-    public void onLoaderReset(Loader loader)
-    {
+    public void onLoaderReset(Loader loader) {
 
     }
 }

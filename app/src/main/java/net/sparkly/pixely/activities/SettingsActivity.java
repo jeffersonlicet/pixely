@@ -10,6 +10,7 @@ import net.sparkly.pixely.R;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity;
 
 public class SettingsActivity extends BaseActivity
 {
@@ -33,7 +34,7 @@ public class SettingsActivity extends BaseActivity
     RadioButton rearBestImage;
 
     @OnClick({R.id.frontalSmallImage, R.id.frontalMediumImage, R.id.frontalBestImage,
-            R.id.rearSmallImage, R.id.rearMediumImage, R.id.rearBestImage})
+            R.id.rearSmallImage, R.id.rearMediumImage, R.id.rearBestImage, R.id.openSourceButton})
     public void onClickManager(View view)
     {
         switch (view.getId())
@@ -48,6 +49,10 @@ public class SettingsActivity extends BaseActivity
             case R.id.rearMediumImage:
             case R.id.rearBestImage:
                 changeRearImageQuality(view);
+                break;
+
+            case R.id.openSourceButton:
+                startActivity(new Intent(this, OssLicensesMenuActivity.class));
                 break;
         }
     }
