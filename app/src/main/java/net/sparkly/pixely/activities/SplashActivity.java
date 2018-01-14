@@ -11,7 +11,6 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -19,12 +18,12 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 
 import net.sparkly.pixely.R;
+import net.sparkly.pixely.utils.PixUtils;
 
-import butterknife.ButterKnife;
-
-public class SplashActivity extends AppCompatActivity {
+public class SplashActivity extends BaseActivity {
 
     private static final int PERMISSION_ALL = 1;
+    private static final String TAG = SplashActivity.class.getSimpleName();
     private boolean canProceed;
     private MaterialDialog request, denied;
 
@@ -36,13 +35,6 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Window currentWindow = getWindow();
-        currentWindow.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-
-        setContentView(R.layout.activity_splash);
-        ButterKnife.bind(this);
 
         buildRequestDialog();
         buildDeniedPermDialog();
@@ -156,21 +148,47 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void initApp() {
+
+        int delayValues = 0;
+
+        if (!getBoolean("launchedBefore")) {
+            delayValues = 500;
+            setBoolean("launchedBefore", true);
+        }
+
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                finish();
+
+                Intent actualIntent = getIntent();
+                String action = actualIntent.getAction();
+                String type = actualIntent.getType();
+                String imageUri = null;
+
+                if (Intent.ACTION_EDIT.equals(action) && type != null && type.startsWith("image/")) {
+                    imageUri = PixUtils.contentToPath(getApplicationContext(), actualIntent.getData());
+                }
+
+                if (imageUri != null) {
+                    Intent editActivity = new Intent(getApplicationContext(), EditorActivity.class);
+                    editActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    editActivity.putExtra("photoUri", imageUri);
+                    startActivity(editActivity);
+                    overridePendingTransition(0, 0);
+
+                } else {
+                    Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    overridePendingTransition(0,0);
+                }
             }
-        }, 5);
+        }, 0);
     }
 
     @Override
-    public void finish()
-    {
+    public void finish() {
         super.finish();
-        overridePendingTransition(0, 0);
+        //overridePendingTransition(0, 0);
     }
 }

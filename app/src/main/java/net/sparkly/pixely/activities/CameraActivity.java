@@ -191,14 +191,8 @@ public class CameraActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        try {
-            Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            requestWindowFeature(Window.FEATURE_NO_TITLE);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         mActivity = this;
 
@@ -260,8 +254,7 @@ public class CameraActivity extends BaseActivity {
         filtersAdapter = new FilterListAdapter(this, filters, filterSelector, selectedFilter, new FilterListAdapter.FilterItemClickListener() {
             @Override
             public void onClickSelectedItemListener(int selected) {
-                try
-                {
+                try {
                     if (!canTakePicture) return;
 
                     takePicture();
@@ -387,7 +380,7 @@ public class CameraActivity extends BaseActivity {
                             internalTakePicture();
                         } else {
                             Log.d(TAG, "Error focusing");
-                            if(nFocusIntents < 2) {
+                            if (nFocusIntents < 2) {
                                 nFocusIntents++;
                                 takePicture();
                             } else {
@@ -850,11 +843,11 @@ public class CameraActivity extends BaseActivity {
                     photoThumbnail.setAlpha(1f);
                     photoThumbnail.setVisibility(View.VISIBLE);
 
-            currentPhoto.setThumbPath(privateStorageManager.getFile(lastTakenThumb).getAbsolutePath());
-            currentPhoto.setBigPath(privateStorageManager.getFile(lastTakenOriginal).getAbsolutePath());
-            previewPhotos.add(0, currentPhoto);
-            photoFeedAdapter.notifyItemInserted(0);
-            photoFeed.setAdapter(photoFeedAdapter);
+                    currentPhoto.setThumbPath(privateStorageManager.getFile(lastTakenThumb).getAbsolutePath());
+                    currentPhoto.setBigPath(privateStorageManager.getFile(lastTakenOriginal).getAbsolutePath());
+                    previewPhotos.add(0, currentPhoto);
+                    photoFeedAdapter.notifyItemInserted(0);
+                    photoFeed.setAdapter(photoFeedAdapter);
 
                 }
             });

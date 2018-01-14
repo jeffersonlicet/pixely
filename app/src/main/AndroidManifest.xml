@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="net.sparkly.pixely">
 
     <uses-permission android:name="android.permission.CAMERA" />
@@ -12,20 +13,25 @@
         android:label="@string/app_name"
         android:largeHeap="true"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
-        <activity
-            android:name=".activities.CameraActivity"
-            android:screenOrientation="portrait" />
+        android:theme="@style/AppTheme"
+        tools:ignore="AllowBackup,GoogleAppIndexingWarning">
+        <activity android:name=".activities.CameraActivity" android:screenOrientation="portrait" android:theme="@style/CameraTheme" />
         <activity android:name=".activities.SettingsActivity" />
         <activity android:name=".activities.GalleryActivity" />
         <activity android:name=".activities.EditorActivity" />
         <activity android:name=".activities.PhotoActivity" />
-        <activity android:name=".activities.SplashActivity">
+        <activity android:name=".activities.SplashActivity" android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.EDIT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
         </activity>
 
         <activity
